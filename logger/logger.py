@@ -3,6 +3,8 @@ PTY wrapper that logs user input as a single request on Enter.
 Detects multi-line pastes and sends only one POST.
 Uses timing to distinguish pasted vs typed text (optional).
 Requires the `requests` library.
+
+Run with python logger.py -- claude
 """
 
 import os
