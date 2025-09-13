@@ -39,14 +39,14 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // Build query with joins to get concept information
     let query = supabase
       .from('exercises')
-      .select(\`
+      .select(`
         *,
         concepts (
           id,
           concept_name,
           status
         )
-      \`)
+      `)
       .eq('user_id', params.user_id)
       .order('created_at', { ascending: false });
 

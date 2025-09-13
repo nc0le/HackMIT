@@ -29,7 +29,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     
     if (!validationResult.success) {
       return createErrorResponse(
-        'Validation error: ' + validationResult.error.errors.map(e => e.message).join(', '),
+        'Validation error: ' + validationResult.error.issues.map((e: any) => e.message).join(', '),
         400
       );
     }

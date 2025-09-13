@@ -20,12 +20,12 @@ export const CreateExerciseSchema = z.object({
   exercise_type: ExerciseTypeSchema,
   question: z.string().min(1, 'Question is required').max(5000, 'Question too long'),
   answer: z.string().min(1, 'Answer is required').max(5000, 'Answer too long'),
-  ai_feedback: z.record(z.any()).optional(),
+  ai_feedback: z.record(z.string(), z.any()).optional(),
   completed: z.boolean().optional(),
 });
 
 export const UpdateExerciseSchema = z.object({
-  ai_feedback: z.record(z.any()).optional(),
+  ai_feedback: z.record(z.string(), z.any()).optional(),
   completed: z.boolean().optional(),
 }).refine(data => Object.keys(data).length > 0, {
   message: 'At least one field must be provided for update',
@@ -40,3 +40,11 @@ export type CreatePromptInput = z.infer<typeof CreatePromptSchema>;
 export type CreateConceptInput = z.infer<typeof CreateConceptSchema>;
 export type CreateExerciseInput = z.infer<typeof CreateExerciseSchema>;
 export type UpdateExerciseInput = z.infer<typeof UpdateExerciseSchema>;
+
+// AI-generated exercise schema
+export const GenerateExerciseSchema = z.object({
+  prompt_id: z.string().uuid('Invalid prompt ID format'),
+  exercise_type: ExerciseTypeSchema,
+});
+
+export type GenerateExerciseInput = z.infer<typeof GenerateExerciseSchema>;
