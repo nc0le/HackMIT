@@ -11,9 +11,7 @@ import sys
 import tty
 import select
 import time
-import threading
 import argparse
-import requests
 
 from functions import upload_to_database
 from utilities import clean_terminal_input, is_physical_enter
@@ -97,7 +95,6 @@ def run_and_log(cmd_args, url=None):
 
 def main():
     parser = argparse.ArgumentParser(description="PTY logger with paste detection")
-    parser.add_argument("--url", required=True, help="Server URL to POST lines to")
     parser.add_argument("cmd", nargs=argparse.REMAINDER, help="-- then command and args to run")
     args = parser.parse_args()
 
@@ -106,7 +103,7 @@ def main():
         sys.exit(2)
 
     cmd_args = args.cmd[1:] if args.cmd[0] == '--' else args.cmd
-    run_and_log(cmd_args, url=args.url)
+    run_and_log(cmd_args)
 
 
 if __name__ == "__main__":
