@@ -15,21 +15,11 @@ import threading
 import argparse
 import requests
 
+from functions import upload_to_database
 from utilities import clean_terminal_input, is_physical_enter
 
 # Threshold in seconds to detect pasted input (fast consecutive bytes)
 PASTE_THRESHOLD = 0.005  # 5 ms
-
-def post_line(url, payload):
-    """Send payload to server asynchronously."""
-    def _post():
-        try:
-            requests.post(url, json=payload, timeout=2)
-        except Exception:
-            pass
-
-    threading.Thread(target=_post, daemon=True).start()
-
 
 def run_and_log(cmd_args, url=None):
     pid, master_fd = pty.fork()
@@ -74,13 +64,9 @@ def run_and_log(cmd_args, url=None):
 
                         if is_physical_enter(b) and not is_paste:
                             # Only trigger POST on actual Enter keypress (not paste)
-                            if line_buffer and url:
-                                payload = {
-                                    "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
-                                    "command_line": clean_terminal_input("".join(line_buffer)),
-                                    "program": cmd_args[0]
-                                }
-                                post_line(url, payload)
+                            if line_buffer:
+                                command_line: str = clean_terminal_input("".join(line_buffer))
+                                upload_to_database(command_line)
                             line_buffer = []
                         elif b in (8, 127):  # backspace/delete
                             if line_buffer:
