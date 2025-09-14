@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import HintModal from '../components/HintModal';
+import ProgressEditModal from '../components/ProgressEditModal';
 
 const Lessons = () => {
     const [showHintModal, setShowHintModal] = useState(false);
+    const [showProgressModal, setShowProgressModal] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitSuccess, setSubmitSuccess] = useState(false);
     const [submitNeedsReview, setSubmitNeedsReview] = useState(false);
@@ -13,7 +15,7 @@ const Lessons = () => {
 
     // Progress data
     const exercisesCompleted = 4;
-    const totalExercises = 25;
+    const [totalExercises, setTotalExercises] = useState(25);
     const progressPercentage = (exercisesCompleted / totalExercises) * 100;
 
     const handleGetHint = () => {
@@ -22,6 +24,18 @@ const Lessons = () => {
 
     const handleCloseHint = () => {
         setShowHintModal(false);
+    };
+
+    const handleEditProgress = () => {
+        setShowProgressModal(true);
+    };
+
+    const handleCloseProgressModal = () => {
+        setShowProgressModal(false);
+    };
+
+    const handleSaveProgressGoal = (newTotal) => {
+        setTotalExercises(newTotal);
     };
 
     const handleSubmit = async () => {
@@ -81,6 +95,12 @@ const Lessons = () => {
     return (
         <div className="mt-6">
             <HintModal isOpen={showHintModal} onClose={handleCloseHint} />
+            <ProgressEditModal 
+                isOpen={showProgressModal} 
+                onClose={handleCloseProgressModal}
+                currentTotal={totalExercises}
+                onSave={handleSaveProgressGoal}
+            />
             
             {/* Progress Bar for Lessons Page */}
             <div className="rounded-2xl p-4 mb-6" style={{backgroundColor: '#F5F5DC', border: '1.5px solid #000000'}}>
@@ -88,9 +108,20 @@ const Lessons = () => {
                     <span className="text-sm font-medium text-gray-800">
                         Progress: {exercisesCompleted}/{totalExercises}
                     </span>
-                    <span className="text-sm text-gray-700">
-                        {Math.round(progressPercentage)}%
-                    </span>
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-700">
+                            {Math.round(progressPercentage)}%
+                        </span>
+                        <button
+                            onClick={handleEditProgress}
+                            className="p-1 text-gray-600 hover:text-[#E89228] transition-colors"
+                            title="Edit progress goal"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
                 <div className="w-full rounded-full h-2" style={{backgroundColor: '#E2E7CE', border: '1px solid #000000'}}>
                     <div 
