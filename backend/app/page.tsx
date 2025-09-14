@@ -12,7 +12,8 @@ const HomePage: React.FC = () => {
                                 <img 
                                     src="/vibelabs.png" 
                                     alt="Vibe Labs Logo" 
-                                    className="mx-auto h-40 w-auto"
+                                    className="mx-auto h-35 w-auto animate-spin"
+                                    style={{animationDuration: '8s'}}
                                 />
                             </div>
                             <h1 className="text-4xl font-bold text-black mb-6">
