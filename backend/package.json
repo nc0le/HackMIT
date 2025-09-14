@@ -1,0 +1,27 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "Next.js + Supabase backend for learning app",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "type-check": "tsc --noEmit",
+    "seed": "node scripts/seed.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.62.0",
+    "@supabase/supabase-js": "^2.57.4",
+    "@types/node": "^24.3.3",
+    "dotenv": "^17.2.2",
+    "next": "^15.5.3",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "typescript": "^5.9.2",
+    "zod": "^4.1.8"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9"
+  }
+}
