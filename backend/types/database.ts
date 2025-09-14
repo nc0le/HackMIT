@@ -44,11 +44,10 @@ export interface ConceptInsert {
 
 export interface ExerciseInsert {
   user_id: string;
-  concept_id: string;
-  exercise_type: ExerciseType;
-  question: string;
-  answer: string;
-  ai_feedback?: Record<string, any>;
+  title: string;
+  description: string;
+  concepts: [string];
+  code: string;
   completed?: boolean;
 }
 
@@ -61,4 +60,11 @@ export interface ExerciseUpdate {
 export interface ConceptUpdate {
   concept_name?: string;
   status?: ConceptStatus;
+}
+
+// Exercise Types
+export interface Code {
+  title: string,
+  description: string,
+  boilerplate_code: string,
 }

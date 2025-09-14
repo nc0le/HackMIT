@@ -8,8 +8,17 @@ function generateConceptSummaryPrompt(
     priorPrompts: [string],
     priorConcepts: [Concept]
 ): string {
-    const promptsList = priorPrompts.map((prompt, index) => `${index + 1}. ${prompt}`).join('\n');
-    const conceptsList = priorConcepts.map((concept, index) => `${index + 1}. Title: "${concept.title}" - Description: "${concept.description}"`).join('\n');
+    const promptsList = priorPrompts
+        .map((prompt, index) => `${index + 1}. ${prompt}`)
+        .join("\n");
+    const conceptsList = priorConcepts
+        .map(
+            (concept, index) =>
+                `${index + 1}. Title: "${concept.title}" - Description: "${
+                    concept.description
+                }"`
+        )
+        .join("\n");
 
     let prompt = `Imagine you are a seasoned CS professor tasked with pinpointing a programmer's weak areas and recommending key concepts to improve. Read through this list of coding prompts they have given to an AI Coding assistant (i.e. cursor):
 
@@ -146,67 +155,121 @@ export async function generateConceptSummary(
     }
 }
 
+function generateExercisePrompt(exerciseType, concepts: [Concept]) {
+    const conceptsList = concepts
+        .map(
+            (concept, index) =>
+                `${index + 1}. Title: "${concept.title}" - Description: "${
+                    concept.description
+                }" - Skill Level: ${concept.skillLevel}`
+        )
+        .join("\n");
+
+    let prompt = `Imagine you are a seasoned CS professor tasked with creating practice problems for specific coding concepts a student can improve on. You are given a list of three key concepts a coder needs to work on here: 
+
+    ${conceptsList} 
+    
+    Using that list, generate three coding exercises total for the concepts. Consider the skillLevel (1 = beginner, 5 = advanced) to determine the difficulty of the exercise. The output must be strictly JSON, do not structure it in any other way. Each concept in the JSON should have exactly four elements: 
+  
+  concept_names: Must exactly match the name(s) of the concept(s) from the input table.
+  title: title for the exercise. should be short
+  description: Instructions for the coding exercise and how it relates to the concept(s), about 3 sentences long.
+  exercise_code: The code for the exercise. Make it concise, clear, and properly formatted with spaces and indentation, just enough for the student to practice the concept. Always follow this format and ensure the JSON is valid.`;
+    console.log(prompt);
+    return prompt;
+}
+
 export async function generateExercise(
-    conceptSummary: string,
-    exerciseType: "flashcard" | "code" | "quiz"
-): Promise<{ question: string; answer: string }> {
+    concepts: [Concept],
+    exerciseType: "code"
+): Promise<ExerciseInsert[]> {
     try {
         let prompt = "";
-
-        switch (exerciseType) {
-            case "flashcard":
-                prompt = `Create a flashcard-style question and answer based on this concept summary:
-
-"${conceptSummary}"
-
-Format your response as JSON with "question" and "answer" fields. The question should test understanding of the key concept, and the answer should be clear and educational.`;
-                break;
-            case "code":
-                prompt = `Create a coding exercise based on this concept summary:
-
-"${conceptSummary}"
-
-Format your response as JSON with "question" and "answer" fields. The question should ask for code implementation or explanation, and the answer should include the correct code with comments.`;
-                break;
-            case "quiz":
-                prompt = `Create a multiple choice quiz question based on this concept summary:
-
-"${conceptSummary}"
-
-Format your response as JSON with "question" and "answer" fields. The question should be a multiple choice question with 4 options (A, B, C, D), and the answer should specify the correct option and brief explanation.`;
-                break;
-        }
-
         const response = await anthropic.messages.create({
-            model: "claude-3-sonnet-20240229",
+            model: "claude-3-7-sonnet-latest",
             max_tokens: 1500,
+            tools: [
+                {
+                    name: "exercises",
+                    description:
+                        "Shows a student exercises based on a precise description using well-structured JSON",
+                    input_schema: {
+                        type: "object",
+                        properties: {
+                            exercises: {
+                                type: "array",
+                                items: {
+                                    type: "object",
+                                    properties: {
+                                        concept_names: {
+                                            type: "array",
+                                            items: {
+                                                type: "string",
+                                                description:
+                                                    "Related concept. Must exactly match the name of the concept from the input table",
+                                            },
+                                            description:
+                                                "Concepts (1 or more) that the problem relates to. Cannot be empty.",
+                                        },
+                                        title: {
+                                            type: "string",
+                                            description:
+                                                "Title for the exercise. Should be a couple words, like 'Center a Div' or 'FizzBuzz'",
+                                        },
+                                        description: {
+                                            type: "string",
+                                            description:
+                                                "Instructions for the coding exercise and how it relates to the concept(s), about 3 sentences long",
+                                        },
+                                        exercise_code: {
+                                            type: "string",
+                                            description:
+                                                "The code for the exercise. Make it concise, clear, and properly formatted with spaces and indentation, just enough for the student to practice the concept",
+                                        },
+                                    },
+                                    required: [
+                                        "concept_names",
+                                        "title",
+                                        "description",
+                                        "exercise_code",
+                                    ],
+                                },
+                            },
+                        },
+                    },
+                },
+            ],
+            tool_choice: { type: "tool", name: "exercises" },
             messages: [
                 {
                     role: "user",
-                    content: prompt,
+                    content: generateExercisePrompt(exerciseType, concepts),
                 },
             ],
         });
 
-        const content =
-            response.content[0].type === "text" ? response.content[0].text : "";
-
-        // Parse JSON response
-        const jsonMatch = content.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) {
-            throw new Error("Invalid JSON response from Claude");
+        // Extract tool response
+        const toolUse = response.content.find(
+            (content) => content.type === "tool_use"
+        );
+        if (!toolUse || toolUse.type !== "tool_use") {
+            throw new Error("No tool use found in response");
         }
 
-        const exerciseData = JSON.parse(jsonMatch[0]);
+        const toolResponse = toolUse.input as any;
+        console.log("Tool response:", toolResponse);
 
-        if (!exerciseData.question || !exerciseData.answer) {
-            throw new Error("Invalid exercise format from Claude");
-        }
+        // Convert tool response to ExerciseInsert array
+        const exercises: ExerciseInsert[] = toolResponse.exercises.map((exerciseData: any, index: number) => ({
+            user_id: concepts[0]?.user_id || "temp", // Use user_id from first concept
+            title: exerciseData.title,
+            description: exerciseData.description,
+            concepts: exerciseData.concept_names, // Array of concept names
+            code: exerciseData.exercise_code,
+            completed: false
+        }));
 
-        return {
-            question: exerciseData.question,
-            answer: exerciseData.answer,
-        };
+        return exercises;
     } catch (error) {
         console.error("Error generating exercise:", error);
         throw new Error("Failed to generate exercise");
