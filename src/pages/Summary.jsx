@@ -29,7 +29,7 @@ const Summary = () => {
             {/* Dashboard Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Total Sessions Card */}
-                <div className="rounded-lg p-6 transform hover:scale-105 transition-all duration-200 bg-[#F5F5DC] border-2 border-black">
+                <div className="rounded-2xl p-6 transform hover:scale-105 transition-all duration-200 bg-[#F5F5DC]" style={{border: '1.5px solid #000000'}}>
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm font-medium text-gray-700">Total Exercises Solved</p>
@@ -44,7 +44,7 @@ const Summary = () => {
                 </div>
 
                 {/* Most Frequent Topic Card */}
-                <div className="rounded-lg p-6 transform hover:scale-105 transition-all duration-200 bg-[#F5F5DC] border-2 border-black">
+                <div className="rounded-2xl p-6 transform hover:scale-105 transition-all duration-200 bg-[#F5F5DC]" style={{border: '1.5px solid #000000'}}>
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm font-medium text-gray-700">Most Frequently Asked About</p>
@@ -59,7 +59,7 @@ const Summary = () => {
                 </div>
 
                 {/* Overall Efficiency Card */}
-                <div className="rounded-lg p-6 transform hover:scale-105 transition-all duration-200 bg-[#F5F5DC] border-2 border-black">
+                <div className="rounded-2xl p-6 transform hover:scale-105 transition-all duration-200 bg-[#F5F5DC]" style={{border: '1.5px solid #000000'}}>
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm font-medium text-gray-700">Skill Diagnosis</p>

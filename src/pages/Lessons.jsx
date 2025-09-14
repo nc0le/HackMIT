@@ -103,7 +103,7 @@ const Lessons = () => {
             />
             
             {/* Progress Bar for Lessons Page */}
-            <div className="rounded-2xl p-4 mb-6" style={{backgroundColor: '#F5F5DC', border: '1.5px solid #000000'}}>
+            <div className="rounded-2xl p-4 mb-6 transform hover:scale-103 transition-all duration-200" style={{backgroundColor: '#F5F5DC', border: '1.5px solid #000000'}}>
                 <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-gray-800">
                         Progress: {exercisesCompleted}/{totalExercises}
