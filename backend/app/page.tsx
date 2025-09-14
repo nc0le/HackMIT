@@ -8,6 +8,13 @@ const HomePage: React.FC = () => {
         <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
                     <div className="rounded-2xl p-8" style={{backgroundColor: '#FFFFE7'}}>
                         <div className="text-center">
+                            <div className="mb-6">
+                                <img 
+                                    src="/vibelabs.png" 
+                                    alt="Vibe Labs Logo" 
+                                    className="mx-auto h-24 w-auto"
+                                />
+                            </div>
                             <h1 className="text-4xl font-bold text-black mb-6">
                                 Welcome to Vibe Labs!
                             </h1>
@@ -18,7 +25,7 @@ const HomePage: React.FC = () => {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
                                 {/* Summary Card */}
                                 <Link href="/summary" className="block">
-                                    <div className="rounded-xl p-6 bg-[#F5F5DC] hover:scale-105 transition-transform duration-200 cursor-pointer h-48" style={{border: '1.5px solid #000000'}}>
+                                    <div className="rounded-2xl p-6 bg-[#F5F5DC] hover:scale-105 transition-transform duration-200 cursor-pointer h-48" style={{border: '1.5px solid #000000'}}>
                                         <div className="text-center">
                                             <div className="p-3 rounded-full mx-auto mb-4 w-16 h-16 flex items-center justify-center" style={{backgroundColor: '#E89228'}}>
                                                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -33,7 +40,7 @@ const HomePage: React.FC = () => {
 
                                 {/* Lessons Card */}
                                 <Link href="/lessons" className="block">
-                                    <div className="rounded-xl p-6 bg-[#F5F5DC] hover:scale-105 transition-transform duration-200 cursor-pointer h-48" style={{border: '1.5px solid #000000'}}>
+                                    <div className="rounded-2xl p-6 bg-[#F5F5DC] hover:scale-105 transition-transform duration-200 cursor-pointer h-48" style={{border: '1.5px solid #000000'}}>
                                         <div className="text-center">
                                             <div className="p-3 rounded-full mx-auto mb-4 w-16 h-16 flex items-center justify-center" style={{backgroundColor: '#ADCF36'}}>
                                                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -48,7 +55,7 @@ const HomePage: React.FC = () => {
 
                                 {/* Leaderboard Card */}
                                 <Link href="/leaderboard" className="block">
-                                    <div className="rounded-xl p-6 bg-[#F5F5DC] hover:scale-105 transition-transform duration-200 cursor-pointer h-48" style={{border: '1.5px solid #000000'}}>
+                                    <div className="rounded-2xl p-6 bg-[#F5F5DC] hover:scale-105 transition-transform duration-200 cursor-pointer h-48" style={{border: '1.5px solid #000000'}}>
                                         <div className="text-center">
                                             <div className="p-3 rounded-full mx-auto mb-4 w-16 h-16 flex items-center justify-center" style={{backgroundColor: '#F0C022'}}>
                                                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
