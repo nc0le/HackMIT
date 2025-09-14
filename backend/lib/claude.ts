@@ -3,12 +3,37 @@ import Anthropic from '@anthropic-ai/sdk';
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
-
-export async function generateConceptSummary(promptText: string): Promise<string> {
+//export async function generateConceptSummary(priorPrompts: [string], priorConcepts ): Promise<string> {
+export async function generateConceptSummary(priorPrompts: [string], priorConcepts[string]): Promise<string> {
   try {
     const response = await anthropic.messages.create({
-      model: 'claude-3-sonnet-20240229',
-      max_tokens: 1000,
+      model: 'claude-3-7-sonnet-latest',
+      max_tokens: 1024,
+      tools: [
+        {
+          "name": "concept_summary",
+          "description": "Summary and description of an learnable concept in programming using well-structured JSON.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "is_new": {
+                "type": "boolean",
+                "description": "Whether or not the concept is new"
+              },
+              "concept_title": {
+                "type": "string",
+                "description": "Short title of the concept, eg \"Centering a Div\" or \"Abstract Classes\""
+              },
+              "concept_description": {
+                "type": "string",
+                "description": "Maximum 2 sentence description of the concept"
+              }
+            },
+            "required": ["new", ""],
+          }
+
+        }
+      ],
       messages: [
         {
           role: 'user',
@@ -60,7 +85,7 @@ Format your response as JSON with "question" and "answer" fields. The question s
     }
 
     const response = await anthropic.messages.create({
-      model: 'claude-3-sonnet-20240229',
+      model: 'claude-3-7-sonnet-latest',
       max_tokens: 1500,
       messages: [
         {
@@ -77,7 +102,9 @@ Format your response as JSON with "question" and "answer" fields. The question s
     if (!jsonMatch) {
       throw new Error('Invalid JSON response from Claude');
     }
-    
+      
+    console.log("Claude output: " + content)
+
     const exerciseData = JSON.parse(jsonMatch[0]);
     
     if (!exerciseData.question || !exerciseData.answer) {

@@ -42,9 +42,25 @@ export type CreateExerciseInput = z.infer<typeof CreateExerciseSchema>;
 export type UpdateExerciseInput = z.infer<typeof UpdateExerciseSchema>;
 
 // AI-generated exercise schema
+// export const GenerateExerciseSchema = z.object({
+//   prompt_id: z.string().uuid('Invalid prompt ID format'),
+//   exercise_type: ExerciseTypeSchema,
+//   new_user_prompts: z.array(z.string().min(1, 'Prompt cannot be empty')).optional()
+// });
+
 export const GenerateExerciseSchema = z.object({
-  prompt_id: z.string().uuid('Invalid prompt ID format'),
-  exercise_type: ExerciseTypeSchema,
+  user_id: z.string().uuid('Invalid user ID format'),
+  new_user_prompts: z.array(z.string().min(1, 'Prompt cannot be empty')).min(1, 'At least one prompt is required'),
+  exercise_type: ExerciseTypeSchema.optional().default('quiz')
 });
 
+// excess unnessary??
+// // New user prompts exercise generation schema
+// export const GenerateFromNewPromptsSchema = z.object({
+//   user_id: z.string().uuid('Invalid user ID format'),
+//   new_user_prompts: z.array(z.string().min(1, 'Prompt cannot be empty')).min(1, 'At least one prompt is required'),
+//   exercise_type: ExerciseTypeSchema.optional().default('quiz'),
+// });s
+
 export type GenerateExerciseInput = z.infer<typeof GenerateExerciseSchema>;
+//export type GenerateFromNewPromptsInput = z.infer<typeof GenerateFromNewPromptsSchema>;
