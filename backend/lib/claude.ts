@@ -4,29 +4,57 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-export async function generateConceptSummary(promptText: string): Promise<string> {
+//export async function generateConceptSummary(priorPrompts: [string], priorConcepts ): Promise<string> {
+export async function generateConceptSummary(
+  priorPrompts: [string],
+  priorConcepts: [string]
+): Promise<string> {
   try {
     const response = await anthropic.messages.create({
-      model: 'claude-3-sonnet-20240229',
-      max_tokens: 1000,
+      model: 'claude-3-7-sonnet-latest',
+      max_tokens: 1024,
+      tools: [
+        {
+          "name": "concept_summary",
+          "description": "Summary and description of an learnable concept in programming using well-structured JSON.",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "is_new": {
+                "type": "boolean",
+                "description": "Whether or not the concept is new"
+              },
+              "concept_title": {
+                "type": "string",
+                "description": "Short title of the concept, eg \"Centering a Div\" or \"Abstract Classes\""
+              },
+              "concept_description": {
+                "type": "string",
+                "description": "Maximum 2 sentence description of the concept"
+              }
+            },
+            "required": ["new", ""],
+          }
+        }
+      ],
       messages: [
         {
           role: 'user',
-          content: `Please provide a concise summary of the key concepts from this prompt. Focus on the main learning objectives and important points that someone should understand:
-
-"${promptText}"
-
-Provide a clear, structured summary that could be used as a learning concept.`
+          content: `Please provide a concise summary of the key concepts from this prompt. Focus on the main learning objectives and important points that someone should understand: "${promptText}" Provide a clear, structured summary that could be used as a learning concept.`
         }
       ]
     });
 
-    return response.content[0].type === 'text' ? response.content[0].text : '';
+    return response.content[0].type === 'text'
+      ? response.content[0].text
+      : '';
+
   } catch (error) {
     console.error('Error generating concept summary:', error);
     throw new Error('Failed to generate concept summary');
   }
 }
+
 
 export async function generateExercise(
   conceptSummary: string, 

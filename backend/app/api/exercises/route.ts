@@ -7,73 +7,9 @@ import { generateConceptSummary, generateExercise } from '@/lib/claude';
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify authentication
-    const userId = await verifyAuth(request);
-    if (!userId) {
-      return createErrorResponse('Unauthorized', 401);
-    }
-
     // Parse and validate request body
     const body = await request.json();
     
-    // Check if this is an AI generation request
-    if (body.generate_from_prompt) {
-      return await handleAIGeneration(request, userId, body);
-    }
-    
-    // Handle regular exercise creation
-    const validationResult = CreateExerciseSchema.safeParse(body);
-    
-    if (!validationResult.success) {
-      return createErrorResponse(
-        'Validation error: ' + validationResult.error.issues.map((e: any) => e.message).join(', '),
-        400
-      );
-    }
-
-    // Verify concept exists and belongs to user
-    const { data: concept, error: conceptError } = await supabase
-      .from('concepts')
-      .select('id')
-      .eq('id', validationResult.data.concept_id)
-      .eq('user_id', userId)
-      .single();
-
-    if (conceptError || !concept) {
-      return createErrorResponse('Concept not found or access denied', 404);
-    }
-
-    // Insert exercise into database
-    const exerciseData: ExerciseInsert = {
-      user_id: userId,
-      concept_id: validationResult.data.concept_id,
-      exercise_type: validationResult.data.exercise_type,
-      question: validationResult.data.question,
-      answer: validationResult.data.answer,
-      ai_feedback: validationResult.data.ai_feedback,
-      completed: validationResult.data.completed || false,
-    };
-
-    const { data, error } = await supabase
-      .from('exercises')
-      .insert(exerciseData)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Database error:', error);
-      return createErrorResponse('Failed to create exercise', 500);
-    }
-
-    return createSuccessResponse(data, 201);
-  } catch (error) {
-    console.error('API error:', error);
-    return createErrorResponse('Internal server error', 500);
-  }
-}
-
-async function handleAIGeneration(request: NextRequest, userId: string, body: any) {
-  try {
     // Validate AI generation request
     const validationResult = GenerateExerciseSchema.safeParse(body);
     
@@ -84,20 +20,27 @@ async function handleAIGeneration(request: NextRequest, userId: string, body: an
       );
     }
 
-    // Fetch the prompt from cursor_prompts
-    const { data: prompt, error: promptError } = await supabase
-      .from('cursor_prompts')
-      .select('*')
-      .eq('id', validationResult.data.prompt_id)
-      .eq('user_id', userId)
-      .single();
-
-    if (promptError || !prompt) {
-      return createErrorResponse('Prompt not found or access denied', 404);
-    }
+    // TODO->DONE: fetch all concepts for the user (body.user_id) match column user_id equals body.user_id (all_concepts)
+        const { data: all_concepts, error: conceptsError } = await supabase
+        .from('concepts')
+        .select('*')
+        .eq('user_id', validationResult.data.user_id);
+  
+      if (conceptsError) {
+        console.error('Error fetching concepts:', conceptsError);
+        return createErrorResponse('Failed to fetch user concepts :((( but this should never happen pls', 500);
+      }
+    // OLD: Fetch the prompt from cursor_prompts
+    // const { data: prompt, error: promptError } = await supabase
+    //   .from('cursor_prompts')
+    //   .select('*')
+    //   .eq('id', validationResult.data.prompt_id)
+    //   .eq('user_id', userId)
+    //   .single();
 
     // Generate concept summary using Claude
-    const conceptSummary = await generateConceptSummary(prompt.prompt_text);
+    // TODO: all_concepts is an array of concepts from previous TODO
+    const newConcepts = await generateConceptSummary(body.last_prompts, all_concepts, body.user_id);
 
     // Create or find concept
     let conceptId: string;
@@ -166,66 +109,6 @@ async function handleAIGeneration(request: NextRequest, userId: string, body: an
     }
 
     return createSuccessResponse(data, 201);
-  } catch (error) {
-    console.error('AI generation error:', error);
-    return createErrorResponse('Failed to generate exercise with AI', 500);
-  }
-}
-
-export async function GET(request: NextRequest) {
-  try {
-    // Verify authentication
-    const userId = await verifyAuth(request);
-    if (!userId) {
-      return createErrorResponse('Unauthorized', 401);
-    }
-
-    // Get query parameters
-    const url = new URL(request.url);
-    const conceptId = url.searchParams.get('concept_id');
-    const exerciseType = url.searchParams.get('exercise_type');
-    const completed = url.searchParams.get('completed');
-    const limit = parseInt(url.searchParams.get('limit') || '50');
-    const offset = parseInt(url.searchParams.get('offset') || '0');
-
-    // Build query with joins to get concept information
-    let query = supabase
-      .from('exercises')
-      .select(`
-        *,
-        concepts (
-          id,
-          concept_name,
-          status
-        )
-      `)
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
-
-    // Add filters if provided
-    if (conceptId) {
-      query = query.eq('concept_id', conceptId);
-    }
-
-    if (exerciseType && ['flashcard', 'code', 'quiz'].includes(exerciseType)) {
-      query = query.eq('exercise_type', exerciseType);
-    }
-
-    if (completed !== null && ['true', 'false'].includes(completed || '')) {
-      query = query.eq('completed', completed === 'true');
-    }
-
-    // Apply pagination
-    query = query.range(offset, offset + limit - 1);
-
-    const { data, error } = await query;
-
-    if (error) {
-      console.error('Database error:', error);
-      return createErrorResponse('Failed to fetch exercises', 500);
-    }
-
-    return createSuccessResponse(data);
   } catch (error) {
     console.error('API error:', error);
     return createErrorResponse('Internal server error', 500);
