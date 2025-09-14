@@ -4,6 +4,7 @@ interface ProgressEditModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentTotal: number;
+  maxValue?: number;
   onSave: (newTotal: number) => void;
 }
 
@@ -11,6 +12,7 @@ const ProgressEditModal: React.FC<ProgressEditModalProps> = ({
   isOpen,
   onClose,
   currentTotal,
+  maxValue,
   onSave
 }) => {
     const [newTotal, setNewTotal] = useState<number>(currentTotal);
@@ -19,7 +21,7 @@ const ProgressEditModal: React.FC<ProgressEditModalProps> = ({
 
     const handleSave = () => {
         const totalValue = parseInt(newTotal.toString());
-        if (totalValue > 0) {
+        if (totalValue > 0 && (!maxValue || totalValue <= maxValue)) {
             onSave(totalValue);
             onClose();
         }
@@ -51,16 +53,22 @@ const ProgressEditModal: React.FC<ProgressEditModalProps> = ({
                 <div className="p-6">
                     <div className="mb-4">
                         <p className="text-sm text-gray-600 mb-4">
-                            Set your target number of problems to complete. This will update your progress bar calculation.
+                            Set your target number of problems to complete{maxValue ? ` (max: ${maxValue})` : ''}. This will update your progress bar calculation.
                         </p>
                         <input
                             type="number"
                             min="1"
+                            max={maxValue}
                             value={newTotal}
                             onChange={handleInputChange}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E89228] focus:border-transparent"
                             style={{backgroundColor: '#F5F5DC'}}
                         />
+                        {maxValue && newTotal > maxValue && (
+                            <p className="text-xs text-red-600 mt-1">
+                                Maximum value is {maxValue} (total available exercises)
+                            </p>
+                        )}
                     </div>
                 </div>
                 <div className="flex justify-end gap-3 p-4" style={{borderColor: '#000000'}}>

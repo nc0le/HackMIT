@@ -1,10 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import HintModal from "../components/HintModal";
 import ProgressEditModal from "../components/ProgressEditModal";
 import { ExerciseInsert } from "@/types/database";
-import { getCodingExercisesByUserId } from "@/supabase/utilities";
+import {
+    getCodingExercisesByUserId,
+    updateExerciseCompletionStatus,
+} from "@/supabase/utilities";
 import CodeMirror from "@uiw/react-codemirror";
 import { javascript } from "@codemirror/lang-javascript";
 import { oneDark } from "@codemirror/theme-one-dark";
@@ -27,14 +30,14 @@ const LessonsPage: React.FC = () => {
     const [submitSuccess, setSubmitSuccess] = useState<boolean>(false);
     const [submitNeedsReview, setSubmitNeedsReview] = useState<boolean>(false);
     const [feedbackMessage, setFeedbackMessage] = useState<string>("");
-    const [totalExercises, setTotalExercises] = useState<number>(25);
+    const [maxExercises, setMaxExercises] = useState<number>(10);
+    const hasSetMaxExercises = useRef<boolean>(false);
 
     const currentExercise = exercises[currentExerciseIndex];
     const exercisesCompleted = exercises.filter((ex) => ex.completed).length;
+    const totalExercises = Math.min(maxExercises, exercises.length);
     const progressPercentage =
-        exercises.length > 0
-            ? (exercisesCompleted / exercises.length) * 100
-            : 0;
+        totalExercises > 0 ? (exercisesCompleted / totalExercises) * 100 : 0;
 
     useEffect(() => {
         const fetchExercises = async () => {
@@ -43,6 +46,11 @@ const LessonsPage: React.FC = () => {
             if (data && !error) {
                 console.log(data);
                 setExercises(data);
+                // Update maxExercises to match the loaded exercises length (only once)
+                if (!hasSetMaxExercises.current) {
+                    setMaxExercises(Math.min(25, data.length));
+                    hasSetMaxExercises.current = true;
+                }
             } else {
                 if (error) {
                     console.error("Error fetching exercises:", error);
@@ -67,6 +75,11 @@ const LessonsPage: React.FC = () => {
                     },
                 ];
                 setExercises(sampleExercises);
+                // Update maxExercises to match the sample exercises length (only once)
+                if (!hasSetMaxExercises.current) {
+                    setMaxExercises(Math.min(25, sampleExercises.length));
+                    hasSetMaxExercises.current = true;
+                }
             }
         };
 
@@ -90,7 +103,7 @@ const LessonsPage: React.FC = () => {
     };
 
     const handleSaveProgressGoal = (newTotal: number): void => {
-        setTotalExercises(newTotal);
+        setMaxExercises(newTotal);
     };
 
     const handleSubmit = async (): Promise<void> => {
@@ -134,13 +147,8 @@ const LessonsPage: React.FC = () => {
                 // Check if Claude says the solution is correct
                 if (result.correct) {
                     setSubmitSuccess(true);
-                    // Mark current exercise as completed
-                    const updatedExercises = exercises.map((exercise, index) =>
-                        index === currentExerciseIndex
-                            ? { ...exercise, completed: true }
-                            : exercise
-                    );
-                    setExercises(updatedExercises);
+                    // Mark current exercise as completed in both Supabase and local state
+                    await markExerciseCompleted(currentExerciseIndex);
                 } else {
                     setSubmitNeedsReview(true);
                     setFeedbackMessage(
@@ -155,12 +163,7 @@ const LessonsPage: React.FC = () => {
                 await new Promise((resolve) => setTimeout(resolve, 400));
                 setSubmitSuccess(true);
                 // Mark current exercise as completed for fallback
-                const updatedExercises = exercises.map((exercise, index) =>
-                    index === currentExerciseIndex
-                        ? { ...exercise, completed: true }
-                        : exercise
-                );
-                setExercises(updatedExercises);
+                await markExerciseCompleted(currentExerciseIndex);
             }
         } catch (error) {
             console.error("Error calling Claude:", error);
@@ -168,12 +171,7 @@ const LessonsPage: React.FC = () => {
             await new Promise((resolve) => setTimeout(resolve, 1200));
             setSubmitSuccess(true);
             // Mark current exercise as completed for fallback
-            const updatedExercises = exercises.map((exercise, index) =>
-                index === currentExerciseIndex
-                    ? { ...exercise, completed: true }
-                    : exercise
-            );
-            setExercises(updatedExercises);
+            await markExerciseCompleted(currentExerciseIndex);
         }
 
         setIsSubmitting(false);
@@ -199,6 +197,50 @@ const LessonsPage: React.FC = () => {
         }
     };
 
+    const markExerciseCompleted = async (
+        exerciseIndex: number
+    ): Promise<void> => {
+        const exercise = exercises[exerciseIndex];
+        if (!exercise) return;
+
+        try {
+            // Update in Supabase with current completion date
+            const completionDate = new Date().toISOString();
+            console.log("Updating exerciise in supabase");
+            const { error } = await updateExerciseCompletionStatus(
+                exercise,
+                true,
+                completionDate
+            );
+
+            if (error) {
+                console.error(
+                    "Error updating exercise completion in Supabase:",
+                    error
+                );
+                // Still update locally even if Supabase update fails
+            }
+
+            // Update local state with completion date
+            const updatedExercises = exercises.map((ex, index) =>
+                index === exerciseIndex
+                    ? { ...ex, completed: true, completed_date: completionDate }
+                    : ex
+            );
+            setExercises(updatedExercises);
+        } catch (error) {
+            console.error("Error marking exercise as completed:", error);
+            // Still update locally as fallback
+            const completionDate = new Date().toISOString();
+            const updatedExercises = exercises.map((ex, index) =>
+                index === exerciseIndex
+                    ? { ...ex, completed: true, completed_date: completionDate }
+                    : ex
+            );
+            setExercises(updatedExercises);
+        }
+    };
+
     return (
         <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
             <div
@@ -217,7 +259,8 @@ const LessonsPage: React.FC = () => {
                     <ProgressEditModal
                         isOpen={showProgressModal}
                         onClose={handleCloseProgressModal}
-                        currentTotal={totalExercises}
+                        currentTotal={maxExercises}
+                        maxValue={exercises.length}
                         onSave={handleSaveProgressGoal}
                     />
 
@@ -233,8 +276,7 @@ const LessonsPage: React.FC = () => {
                     >
                         <div className="flex items-center justify-between mb-2">
                             <span className="text-sm font-medium text-gray-800">
-                                Progress: {exercisesCompleted}/
-                                {exercises.length}
+                                Progress: {exercisesCompleted}/{totalExercises}
                             </span>
                             <div className="flex items-center gap-2">
                                 <span className="text-sm text-gray-700">
