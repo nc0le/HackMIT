@@ -3,17 +3,17 @@ const path = require('path');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // Middleware to parse JSON
 app.use(express.json());
 
-// Serve static files from the current directory
-app.use(express.static('.'));
+// Serve static files from the React build
+app.use(express.static(path.join(__dirname, 'dist')));
 
-// Route to serve the main HTML file
+// Route to serve the React app for all non-API routes
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
 // API endpoint to submit code to Claude
@@ -84,6 +84,11 @@ Please respond with either "CORRECT" if the solution is correct, or provide spec
             error: 'Internal server error' 
         });
     }
+});
+
+// Catch all handler: send back React's index.html file for any non-API routes
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
 // Start the server
