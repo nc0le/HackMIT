@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
 import { verifyAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth';
 import { CreateExerciseSchema, GenerateExerciseSchema } from '@/lib/validations';
 import { ExerciseInsert } from '@/types/database';
@@ -20,60 +20,60 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // TODO->DONE: fetch all concepts for the user (body.user_id) match column user_id equals body.user_id (all_concepts)
-        const { data: all_concepts, error: conceptsError } = await supabase
-        .from('concepts')
-        .select('*')
-        .eq('user_id', validationResult.data.user_id);
+    // fetch all concepts for the user (body.user_id) match column user_id equals body.user_id (all_concepts)
+    const { data: all_concepts, error: conceptsError } = await supabaseAdmin
+    .from('concepts')
+    .select('*')
+    .eq('user_id', validationResult.data.user_id);
   
-      if (conceptsError) {
-        console.error('Error fetching concepts:', conceptsError);
-        return createErrorResponse('Failed to fetch user concepts :((( but this should never happen pls', 500);
-      }
-    // OLD: Fetch the prompt from cursor_prompts
-    // const { data: prompt, error: promptError } = await supabase
-    //   .from('cursor_prompts')
-    //   .select('*')
-    //   .eq('id', validationResult.data.prompt_id)
-    //   .eq('user_id', userId)
-    //   .single();
+    if (conceptsError) {
+      console.error('Error fetching concepts:', conceptsError);
+      return createErrorResponse('Failed to fetch user concepts :((( but this should never happen pls', 500);
+    }
 
     // Generate concept summary using Claude
-    // TODO: all_concepts is an array of concepts from previous TODO
-    const newConcepts = await generateConceptSummary(body.last_prompts, all_concepts, body.user_id);
+    const generatedConcepts: Concept[] = await generateConceptSummary(body.last_prompts, all_concepts);
 
-    // Create or find concept
-    let conceptId: string;
-    const { data: existingConcept } = await supabase
-      .from('concepts')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('source_prompt_id', prompt.id)
-      .single();
+    // Process concepts - create new ones if id is null
+    const processedConcepts: Concept[] = [];
 
-    if (existingConcept) {
-      conceptId = existingConcept.id;
-    } else {
-      // Create new concept
-      const { data: newConcept, error: conceptError } = await supabase
-        .from('concepts')
-        .insert({
-          user_id: userId,
-          concept_name: conceptSummary.substring(0, 100) + '...', // Truncate for concept name
-          source_prompt_id: prompt.id,
-          status: 'unlearned'
-        })
-        .select()
-        .single();
+    for (const concept of generatedConcepts) {
+      if (concept.id === null) {
+        // Create new concept in database
+        const { data: newConcept, error: conceptError } = await supabaseAdmin
+          .from('concepts')
+          .insert({
+            user_id: concept.user_id,
+            title: concept.title,
+            description: concept.description,
+            skillLevel: concept.skillLevel
+          })
+          .select()
+          .single();
 
-      if (conceptError || !newConcept) {
-        return createErrorResponse('Failed to create concept', 500);
+        if (conceptError || !newConcept) {
+          console.error('Failed to create concept:', conceptError);
+          return createErrorResponse('Failed to create concept', 500);
+        }
+
+        processedConcepts.push({
+          ...concept,
+          id: newConcept.id,
+          created_at: newConcept.created_at
+        });
+      } else {
+        processedConcepts.push(concept);
       }
-      conceptId = newConcept.id;
+    }
+
+    // Use the first concept for exercise generation
+    const firstConcept = processedConcepts[0];
+    if (!firstConcept) {
+      return createErrorResponse('No concepts generated', 500);
     }
 
     // Generate exercise using Claude
-    const exercise = await generateExercise(conceptSummary, validationResult.data.exercise_type);
+    const exercise = await generateExercise(firstConcept.description, validationResult.data.exercise_type);
 
     // Insert exercise into database
     const exerciseData: ExerciseInsert = {

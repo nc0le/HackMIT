@@ -9,12 +9,12 @@ export interface CursorPrompt {
 }
 
 export interface Concept {
-  id: string;
+  id: string | None;
+  created_at: string | None;
   user_id: string;
-  concept_name: string;
-  source_prompt_id: string | null;
-  status: ConceptStatus;
-  created_at: string;
+  title: string;
+  description: string;
+  skillLevel: int;
 }
 
 export interface Exercise {

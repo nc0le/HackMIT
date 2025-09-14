@@ -45,7 +45,7 @@ export type UpdateExerciseInput = z.infer<typeof UpdateExerciseSchema>;
 // TODO->DONE: modify this to match last promptst / user id
 export const GenerateExerciseSchema = z.object({
   last_prompts: z.array(z.string()).min(1, 'At least one prompt is required'),
-  user_id: z.string().uuid('Invalid user ID format'),
+  user_id: z.string(),
 });
 
 export type GenerateExerciseInput = z.infer<typeof GenerateExerciseSchema>;
