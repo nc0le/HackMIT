@@ -6,13 +6,13 @@ import Link from 'next/link';
 const HomePage: React.FC = () => {
     return (
         <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-                    <div className="rounded-2xl p-8" style={{backgroundColor: '#FFFFE7'}}>
+                    <div className="rounded-2xl p-8">
                         <div className="text-center">
                             <div className="mb-6">
                                 <img 
                                     src="/vibelabs.png" 
                                     alt="Vibe Labs Logo" 
-                                    className="mx-auto h-24 w-auto"
+                                    className="mx-auto h-40 w-auto"
                                 />
                             </div>
                             <h1 className="text-4xl font-bold text-black mb-6">

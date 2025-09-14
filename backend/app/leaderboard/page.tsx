@@ -22,7 +22,7 @@ const LeaderboardPage: React.FC = () => {
 
     return (
         <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-            <div className="rounded-2xl p-8" style={{backgroundColor: '#FFFFE7', border: '2px solid #000000'}}>
+            <div className="rounded-2xl p-8" style={{backgroundColor: 'rgba(255, 255, 231, 0.8)', border: '2px solid #000000'}}>
                 <h1 className="text-3xl font-bold text-black mb-4">LEADERBOARD</h1>
                 <div className="text-gray-700 space-y-6">
             {/* Leaderboard Table */}
@@ -70,7 +70,7 @@ const LeaderboardPage: React.FC = () => {
                                                 </div>
                                             </div>
                                             <div className="ml-4">
-                                                <div className={`text-sm font-medium ${
+                                                <div className={`text-sm font-medium cursor-pointer transition-colors duration-200 hover:text-[#E89228] ${
                                                     user.isCurrentUser ? 'text-black' : 'text-black'
                                                 }`}
                                                 style={user.isCurrentUser ? {color: '#DC9642'} : {}}>
