@@ -1,0 +1,4 @@
+__pycache__
+node_modules
+server/user_commands.log
+.env
