@@ -23,6 +23,7 @@ const LessonsPage: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const [submitSuccess, setSubmitSuccess] = useState<boolean>(false);
     const [submitNeedsReview, setSubmitNeedsReview] = useState<boolean>(false);
+    const [feedbackMessage, setFeedbackMessage] = useState<string>("");
     const [totalExercises, setTotalExercises] = useState<number>(25);
 
     const currentExercise = exercises[currentExerciseIndex];
@@ -93,6 +94,7 @@ const LessonsPage: React.FC = () => {
         setIsSubmitting(true);
         setSubmitSuccess(false);
         setSubmitNeedsReview(false);
+        setFeedbackMessage("");
 
         try {
             // Debug: Log what we're sending
@@ -106,10 +108,19 @@ const LessonsPage: React.FC = () => {
                 },
                 body: JSON.stringify({
                     code: currentExercise?.code || "",
+                    title: currentExercise?.title || "",
+                    description: currentExercise?.description || "",
                 }),
             });
 
             const result: SubmitResponse = await response.json();
+
+            // TODO: to speed things up
+            // const result = {
+            //     success: true,
+            //     correct: true,
+            //     feedback: "",
+            // };
 
             if (result.success) {
                 console.log("Claude feedback:", result.feedback);
@@ -129,6 +140,10 @@ const LessonsPage: React.FC = () => {
                     setExercises(updatedExercises);
                 } else {
                     setSubmitNeedsReview(true);
+                    setFeedbackMessage(
+                        result.feedback ||
+                            "Please check your solution and try again."
+                    );
                     console.log("Code needs improvement:", result.feedback);
                 }
             } else {
@@ -136,15 +151,38 @@ const LessonsPage: React.FC = () => {
                 // Fallback to simulation
                 await new Promise((resolve) => setTimeout(resolve, 400));
                 setSubmitSuccess(true);
+                // Mark current exercise as completed for fallback
+                const updatedExercises = exercises.map((exercise, index) =>
+                    index === currentExerciseIndex
+                        ? { ...exercise, completed: true }
+                        : exercise
+                );
+                setExercises(updatedExercises);
             }
         } catch (error) {
             console.error("Error calling Claude:", error);
             // Fallback to simulation for demo purposes with delay
             await new Promise((resolve) => setTimeout(resolve, 1200));
             setSubmitSuccess(true);
+            // Mark current exercise as completed for fallback
+            const updatedExercises = exercises.map((exercise, index) =>
+                index === currentExerciseIndex
+                    ? { ...exercise, completed: true }
+                    : exercise
+            );
+            setExercises(updatedExercises);
         }
 
         setIsSubmitting(false);
+    };
+
+    const handleNext = (): void => {
+        if (currentExerciseIndex < exercises.length - 1) {
+            setCurrentExerciseIndex(currentExerciseIndex + 1);
+            setSubmitSuccess(false);
+            setSubmitNeedsReview(false);
+            setFeedbackMessage("");
+        }
     };
 
     const handleTextareaChange = (
@@ -239,7 +277,7 @@ const LessonsPage: React.FC = () => {
                     {/* Two-Column Layout */}
                     <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-280px)]">
                         {/* Left Column - Resources Panel (1/3 width) */}
-                        <div
+                        {/* <div
                             className="w-full lg:w-1/3 rounded-2xl overflow-hidden"
                             style={{
                                 backgroundColor: "#F5F5DC",
@@ -307,11 +345,11 @@ const LessonsPage: React.FC = () => {
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div> */}
 
                         {/* Right Column - Exercise Panel (2/3 width) */}
                         <div
-                            className="w-full lg:w-2/3 rounded-2xl overflow-hidden flex flex-col"
+                            className="w-full rounded-2xl overflow-hidden flex flex-col"
                             style={{
                                 backgroundColor: "#DCDCC7",
                                 border: "1.5px solid #000000",
@@ -388,9 +426,9 @@ const LessonsPage: React.FC = () => {
                                 {/* Needs Review Message */}
                                 {submitNeedsReview && (
                                     <div className="mb-4 p-3 bg-[#FFE4B5] border border-orange-300 rounded-md">
-                                        <div className="flex items-center">
+                                        <div className="flex items-start">
                                             <svg
-                                                className="w-5 h-5 text-orange-600 mr-2"
+                                                className="w-5 h-5 text-orange-600 mr-2 mt-0.5 flex-shrink-0"
                                                 fill="none"
                                                 stroke="currentColor"
                                                 viewBox="0 0 24 24"
@@ -402,28 +440,39 @@ const LessonsPage: React.FC = () => {
                                                     d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
                                                 />
                                             </svg>
-                                            <span className="text-sm font-medium text-orange-700">
-                                                Please check your solution and
-                                                try again.
-                                            </span>
+                                            <div className="text-sm font-medium text-orange-700">
+                                                {feedbackMessage}
+                                            </div>
                                         </div>
                                     </div>
                                 )}
 
-                                <div className="flex justify-between items-center">
-                                    <button
+                                <div className="flex justify-between items-center w-full">
+                                    {/* <button
                                         onClick={handleGetHint}
                                         className="px-4 py-2 text-sm font-medium text-black border border-[#E89228] rounded-md"
                                         style={{ backgroundColor: "#E89228" }}
                                     >
                                         Get a Hint
-                                    </button>
+                                    </button> */}
                                     <button
-                                        onClick={handleSubmit}
-                                        disabled={isSubmitting}
+                                        onClick={
+                                            submitSuccess
+                                                ? handleNext
+                                                : handleSubmit
+                                        }
+                                        disabled={
+                                            isSubmitting ||
+                                            (submitSuccess &&
+                                                currentExerciseIndex >=
+                                                    exercises.length - 1)
+                                        }
                                         className={`px-6 py-2 text-sm font-medium text-black rounded-md flex items-center ${
-                                            isSubmitting
-                                                ? "cursor-not-allowed"
+                                            isSubmitting ||
+                                            (submitSuccess &&
+                                                currentExerciseIndex >=
+                                                    exercises.length - 1)
+                                                ? "cursor-not-allowed opacity-50"
                                                 : ""
                                         }`}
                                         style={{ backgroundColor: "#ADCF36" }}
@@ -450,6 +499,13 @@ const LessonsPage: React.FC = () => {
                                                 </svg>
                                                 Checking...
                                             </>
+                                        ) : submitSuccess ? (
+                                            currentExerciseIndex >=
+                                            exercises.length - 1 ? (
+                                                "Completed"
+                                            ) : (
+                                                "Next"
+                                            )
                                         ) : (
                                             "Submit"
                                         )}

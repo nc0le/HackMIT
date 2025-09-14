@@ -3,9 +3,9 @@ import { analyzeSolution } from "@/lib/claude";
 
 export async function POST(request: NextRequest) {
     const body = await request.json();
-    const { code } = body;
+    const { code, title, description } = body;
     try {
-        const result = await analyzeSolution(code);
+        const result = await analyzeSolution(code, title, description);
         console.log("Result returned!!!");
         console.log(result);
         return NextResponse.json({
