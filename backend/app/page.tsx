@@ -1,31 +1,83 @@
-export default function Home() {
-  return (
-    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <h1>Learning App API</h1>
-      <p>Next.js + Supabase Backend for Learning Management</p>
-      
-      <h2>Available API Endpoints:</h2>
-      <ul>
-        <li><strong>POST /api/prompts</strong> - Log new prompt</li>
-        <li><strong>GET /api/prompts</strong> - Get user's prompts</li>
-        <li><strong>GET /api/concepts/:user_id</strong> - Fetch user's concepts</li>
-        <li><strong>POST /api/concepts</strong> - Add a new concept</li>
-        <li><strong>GET /api/exercises/user/:user_id</strong> - Fetch user's exercises</li>
-        <li><strong>POST /api/exercises</strong> - Create new exercise</li>
-        <li><strong>PATCH /api/exercises/:id</strong> - Mark exercise as completed + store AI feedback</li>
-        <li><strong>GET /api/exercises/:id</strong> - Get specific exercise</li>
-      </ul>
+'use client';
 
-      <h2>Authentication:</h2>
-      <p>All endpoints require a valid JWT token in the Authorization header:</p>
-      <code>Authorization: Bearer &lt;your-jwt-token&gt;</code>
+import React, { useState } from 'react';
+import Navigation from './components/Navigation';
+import Link from 'next/link';
 
-      <h2>Database Schema:</h2>
-      <ul>
-        <li><strong>cursor_prompts:</strong> User prompts with timestamps</li>
-        <li><strong>concepts:</strong> Learning concepts linked to prompts</li>
-        <li><strong>exercises:</strong> Practice exercises for concepts</li>
-      </ul>
-    </div>
-  );
-}
+type PageName = 'SUMMARY' | 'LESSONS' | 'LEADERBOARD';
+
+const App: React.FC = () => {
+    const [activePage, setActivePage] = useState<PageName>('SUMMARY');
+
+    const handleNavClick = (pageName: string) => {
+        setActivePage(pageName as PageName);
+    };
+
+    const renderActivePage = () => {
+        switch (activePage) {
+            case 'SUMMARY':
+                return (
+                    <div className="space-y-4">
+                        <p>Welcome to the summary page!</p>
+                        <Link href="/summary" className="text-blue-600 hover:text-blue-800">
+                            Go to full Summary page →
+                        </Link>
+                    </div>
+                );
+            case 'LESSONS':
+                return (
+                    <div className="space-y-4">
+                        <p>Ready to learn? Start with coding exercises!</p>
+                        <Link href="/lessons" className="text-blue-600 hover:text-blue-800">
+                            Go to Lessons page →
+                        </Link>
+                    </div>
+                );
+            case 'LEADERBOARD':
+                return (
+                    <div className="space-y-4">
+                        <p>See how you stack up against your friends!</p>
+                        <Link href="/leaderboard" className="text-blue-600 hover:text-blue-800">
+                            Go to Leaderboard page →
+                        </Link>
+                    </div>
+                );
+            default:
+                return <div>Summary content coming soon...</div>;
+        }
+    };
+
+    return (
+        <div className="min-h-screen relative" style={{backgroundColor: '#FFFFE7'}}>
+            {/* Grid Background Overlay */}
+            <div
+                className="fixed inset-0 pointer-events-none opacity-20"
+                style={{
+                    backgroundImage: `
+                        linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)
+                    `,
+                    backgroundSize: '20px 20px'
+                }}
+            ></div>
+
+            <Navigation activePage={activePage} onNavClick={handleNavClick} />
+
+            {/* Content Area */}
+            <main className="pt-16">
+                <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+                    <div className="rounded-2xl p-8" style={{backgroundColor: '#FFFFE7', border: '2px solid #000000'}}>
+                        <h1 className="text-3xl font-bold text-black mb-4">
+                            {activePage}
+                        </h1>
+                        <div className="text-gray-700">
+                            {renderActivePage()}
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    );
+};
+
+export default App;

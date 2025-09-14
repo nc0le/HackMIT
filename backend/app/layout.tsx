@@ -1,8 +1,9 @@
 import { Metadata } from 'next'
+import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Learning App API',
-  description: 'Next.js + Supabase backend for learning management',
+  title: 'Learning App',
+  description: 'A comprehensive learning platform with coding exercises and progress tracking',
 }
 
 export default function RootLayout({
@@ -12,7 +13,22 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className="min-h-screen" style={{backgroundColor: '#FFFFE7'}}>
+        {/* Grid Background Overlay */}
+        <div
+          className="fixed inset-0 pointer-events-none opacity-20 z-0"
+          style={{
+            backgroundImage: `
+              linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)
+            `,
+            backgroundSize: '20px 20px'
+          }}
+        />
+        <div className="relative z-10">
+          {children}
+        </div>
+      </body>
     </html>
   )
 }
