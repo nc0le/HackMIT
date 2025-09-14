@@ -21,7 +21,7 @@ from utilities import clean_terminal_input, is_physical_enter
 
 # Threshold in seconds to detect pasted input (fast consecutive bytes)
 PASTE_THRESHOLD = 0.005  # 5 ms
-PROMPTS_THRESHOLD = 10
+PROMPTS_THRESHOLD = 3 
 
 def cleanup_and_exit(last_prompts):
     """Send remaining prompts before exit"""
