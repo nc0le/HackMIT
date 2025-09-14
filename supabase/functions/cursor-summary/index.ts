@@ -38,60 +38,39 @@ serve(async (req: Request): Promise<Response> => {
     // Initialize Supabase client with service role
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Fetch and display ALL records from cursor_prompts table
-    console.log("📋 Fetching all records from cursor_prompts table...");
-    const { data: allPrompts, error } = await supabase
-      .from("cursor_prompts")
-      .select("*")
-      .order("timestamp", { ascending: false });
-
-    if (error) {
-      console.error("❌ Error fetching prompts:", error);
-      return new Response(JSON.stringify({ error: "Failed to fetch prompts" }), { status: 500 });
-    }
-
-    // Print the entire table
-    console.log("📊 CURSOR_PROMPTS TABLE CONTENTS:");
-    console.log("=====================================");
-    console.log(`Total records: ${allPrompts?.length || 0}`);
-    
-    if (allPrompts && allPrompts.length > 0) {
-      allPrompts.forEach((prompt: any, index: number) => {
-        console.log(`\n${index + 1}. Record:`);
-        console.log(`   ID: ${prompt.id}`);
-        console.log(`   User ID: ${prompt.user_id}`);
-        console.log(`   Prompt Text: ${prompt.prompt_text}`);
-        console.log(`   Timestamp: ${prompt.timestamp}`);
-        console.log(`   ---`);
-      });
-    } else {
-      console.log("📋 Table is empty - no records found");
-    }
-    console.log("=====================================");
-
-    // Try to parse the request payload if it exists
+    // Try to parse the request payload to get the new record
+    let newRecord: CursorPrompt | null = null;
     try {
       const payload = await req.json();
-      const newRecord: CursorPrompt = payload.record;
-      
-      if (newRecord) {
-        console.log("\n🎯 NEW RECORD DETECTED IN PAYLOAD:");
-        console.log(`📝 Prompt ID: ${newRecord.id}`);
-        console.log(`👤 User ID: ${newRecord.user_id}`);
-        console.log(`📄 Prompt Text: ${newRecord.prompt_text}`);
-        console.log(`⏰ Timestamp: ${newRecord.timestamp}`);
-      }
+      newRecord = payload.record;
     } catch (parseError) {
-      console.log("\n⚠️ No valid JSON payload in request");
+      // No payload, that's okay
     }
 
-    console.log("\n✅ Table contents printed successfully!");
-    return new Response(JSON.stringify({ success: true, message: "Table contents printed" }), { status: 200 });
+    // Add a new row to cursor_summaries table to show the function was called
+    const { data: summaryData, error: summaryError } = await supabase
+      .from("cursor_summaries")
+      .insert({
+        triggered_by_prompt_id: newRecord?.id || null,
+        triggered_by_user_id: newRecord?.user_id || null,
+        function_called_at: new Date().toISOString(),
+        status: "completed"
+      })
+      .select();
+
+    if (summaryError) {
+      return new Response(JSON.stringify({ error: "Failed to create summary record" }), { status: 500 });
+    }
+
+    return new Response(JSON.stringify({ 
+      success: true, 
+      message: "Function executed and summary created",
+      summary_id: summaryData?.[0]?.id 
+    }), { status: 200 });
   } catch (err) {
-    console.error("❌ Function error:", err);
     return new Response(JSON.stringify({ error: "Unexpected error", details: `${err}` }), { status: 500 });
   }
 });
