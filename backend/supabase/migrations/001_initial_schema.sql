@@ -1,6 +1,3 @@
--- Create custom types (enums)
-CREATE TYPE concept_status AS ENUM ('unlearned', 'learning', 'mastered');
-CREATE TYPE exercise_type AS ENUM ('flashcard', 'code', 'quiz');
 
 -- Create cursor_prompts table
 CREATE TABLE cursor_prompts (
@@ -12,44 +9,35 @@ CREATE TABLE cursor_prompts (
 
 -- Create concepts table
 CREATE TABLE concepts (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-    concept_name TEXT NOT NULL,
+    id BIGSERIAL PRIMARY KEY,
+    concept JSON NOT NULL,
     source_prompt_id BIGINT REFERENCES cursor_prompts(id) ON DELETE SET NULL,
-    status concept_status DEFAULT 'unlearned',
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    skillLevel BIGINT NOT NULL
 );
 
--- Create exercises table
-CREATE TABLE exercises (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-    concept_id UUID REFERENCES concepts(id) ON DELETE CASCADE,
-    exercise_type exercise_type NOT NULL,
-    question TEXT NOT NULL,
-    answer TEXT NOT NULL,
-    ai_feedback JSONB,
+-- Create coding_exercises table
+CREATE TABLE coding_exercises (
+    id BIGSERIAL PRIMARY KEY,
+    concept JSON NOT NULL,
+    description JSON NOT NULL,
+    code TEXT NOT NULL,
     completed BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    user_id TEXT NOT NULL
 );
 
 -- Create indexes for better query performance
 CREATE INDEX idx_cursor_prompts_user_id ON cursor_prompts(user_id);
 CREATE INDEX idx_cursor_prompts_created_at ON cursor_prompts(created_at);
 
-CREATE INDEX idx_concepts_user_id ON concepts(user_id);
-CREATE INDEX idx_concepts_status ON concepts(status);
-CREATE INDEX idx_concepts_created_at ON concepts(created_at);
+CREATE INDEX idx_concepts_source_prompt_id ON concepts(source_prompt_id);
+CREATE INDEX idx_concepts_skill_level ON concepts(skillLevel);
 
-CREATE INDEX idx_exercises_user_id ON exercises(user_id);
-CREATE INDEX idx_exercises_concept_id ON exercises(concept_id);
-CREATE INDEX idx_exercises_completed ON exercises(completed);
-CREATE INDEX idx_exercises_created_at ON exercises(created_at);
+CREATE INDEX idx_coding_exercises_user_id ON coding_exercises(user_id);
+CREATE INDEX idx_coding_exercises_completed ON coding_exercises(completed);
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE cursor_prompts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE concepts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE exercises ENABLE ROW LEVEL SECURITY;
+ALTER TABLE coding_exercises ENABLE ROW LEVEL SECURITY;
 
 -- Create RLS policies
 -- Users can only access their own data
@@ -61,22 +49,13 @@ CREATE POLICY "Users can view own prompts" ON cursor_prompts
 CREATE POLICY "Users can insert own prompts" ON cursor_prompts
     FOR INSERT WITH CHECK (auth.uid()::text = user_id);
 
--- concepts policies
-CREATE POLICY "Users can view own concepts" ON concepts
-    FOR SELECT USING (auth.uid() = user_id);
+-- coding_exercises policies
+CREATE POLICY "Users can view own coding exercises" ON coding_exercises
+    FOR SELECT USING (auth.uid()::text = user_id);
 
-CREATE POLICY "Users can insert own concepts" ON concepts
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can insert own coding exercises" ON coding_exercises
+    FOR INSERT WITH CHECK (auth.uid()::text = user_id);
 
-CREATE POLICY "Users can update own concepts" ON concepts
-    FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can update own coding exercises" ON coding_exercises
+    FOR UPDATE USING (auth.uid()::text = user_id);
 
--- exercises policies
-CREATE POLICY "Users can view own exercises" ON exercises
-    FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert own exercises" ON exercises
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update own exercises" ON exercises
-    FOR UPDATE USING (auth.uid() = user_id);
