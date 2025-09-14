@@ -13,6 +13,7 @@ CREATE TABLE concepts (
     concept JSON NOT NULL,
     source_prompt_id BIGINT REFERENCES cursor_prompts(id) ON DELETE SET NULL,
     skillLevel BIGINT NOT NULL
+    user_id TEXT NOT NULL
 );
 
 -- Create coding_exercises table
