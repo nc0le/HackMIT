@@ -106,7 +106,10 @@ const LessonsPage: React.FC = () => {
     };
 
     return (
-        <div className="mt-6">
+        <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+            <div className="rounded-2xl p-8" style={{backgroundColor: '#FFFFE7', border: '2px solid #000000'}}>
+                <h1 className="text-3xl font-bold text-black mb-4">LESSONS</h1>
+                <div className="text-gray-700">
             <HintModal isOpen={showHintModal} onClose={handleCloseHint} />
             <ProgressEditModal
                 isOpen={showProgressModal}
@@ -269,6 +272,8 @@ const LessonsPage: React.FC = () => {
                             </button>
                         </div>
                     </div>
+                </div>
+            </div>
                 </div>
             </div>
         </div>

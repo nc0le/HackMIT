@@ -1,20 +1,22 @@
-import React from 'react';
+'use client';
 
-interface NavigationProps {
-  activePage: string;
-  onNavClick: (pageName: string) => void;
-}
+import React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 interface NavigationItem {
   name: string;
-  id: string;
+  href: string;
 }
 
-const Navigation: React.FC<NavigationProps> = ({ activePage, onNavClick }) => {
+const Navigation: React.FC = () => {
+    const pathname = usePathname();
+
     const navigationItems: NavigationItem[] = [
-        { name: 'SUMMARY', id: 'summary' },
-        { name: 'LESSONS', id: 'lessons' },
-        { name: 'LEADERBOARD', id: 'leaderboard' }
+        { name: 'HOME', href: '/' },
+        { name: 'SUMMARY', href: '/summary' },
+        { name: 'LESSONS', href: '/lessons' },
+        { name: 'LEADERBOARD', href: '/leaderboard' }
     ];
 
     return (
@@ -23,25 +25,28 @@ const Navigation: React.FC<NavigationProps> = ({ activePage, onNavClick }) => {
                 <div className="flex justify-between items-center h-16">
                     {/* Navigation Links */}
                     <div className="flex space-x-8">
-                        {navigationItems.map((item) => (
-                            <button
-                                key={item.id}
-                                onClick={() => onNavClick(item.name)}
-                                className={`px-3 py-2 rounded-md text-sm font-medium ${
-                                    activePage === item.name
-                                        ? 'text-black border-b-2'
-                                        : 'text-gray-700'
-                                }`}
-                                style={activePage === item.name ? {borderBottomColor: '#F5F5DC', backgroundColor: '#F5F5DC'} : {}}
-                            >
-                                {item.name}
-                            </button>
-                        ))}
+                        {navigationItems.map((item) => {
+                            const isActive = pathname === item.href;
+                            return (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                                        isActive
+                                            ? 'text-black border-b-2'
+                                            : 'text-gray-700 hover:text-black'
+                                    }`}
+                                    style={isActive ? {borderBottomColor: '#F5F5DC', backgroundColor: '#F5F5DC'} : {}}
+                                >
+                                    {item.name}
+                                </Link>
+                            );
+                        })}
                     </div>
 
                     {/* User Account Icon */}
                     <div className="flex items-center">
-                        <button className="p-2 rounded-full text-gray-700">
+                        <button className="p-2 rounded-full text-gray-700 hover:text-black transition-colors">
                             <svg
                                 className="w-6 h-6"
                                 fill="none"

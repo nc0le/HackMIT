@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import './globals.css'
+import Navigation from './components/Navigation'
 
 export const metadata: Metadata = {
   title: 'Learning App',
@@ -26,7 +27,10 @@ export default function RootLayout({
           }}
         />
         <div className="relative z-10">
-          {children}
+          <Navigation />
+          <main className="pt-16">
+            {children}
+          </main>
         </div>
       </body>
     </html>

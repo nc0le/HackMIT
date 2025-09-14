@@ -21,7 +21,10 @@ const LeaderboardPage: React.FC = () => {
     ];
 
     return (
-        <div className="mt-6 space-y-6">
+        <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+            <div className="rounded-2xl p-8" style={{backgroundColor: '#FFFFE7', border: '2px solid #000000'}}>
+                <h1 className="text-3xl font-bold text-black mb-4">LEADERBOARD</h1>
+                <div className="text-gray-700 space-y-6">
             {/* Leaderboard Table */}
             <div className="rounded-2xl overflow-hidden" style={{backgroundColor: '#F5F5DC', border: '1.5px solid #000000'}}>
                 <div className="px-6 py-4 border-b-[1.5px]" style={{backgroundColor: '#DCDCC4', borderColor: '#000000'}}>
@@ -91,6 +94,8 @@ const LeaderboardPage: React.FC = () => {
                             ))}
                         </tbody>
                     </table>
+                </div>
+            </div>
                 </div>
             </div>
         </div>
