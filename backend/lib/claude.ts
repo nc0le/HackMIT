@@ -93,3 +93,45 @@ Format your response as JSON with "question" and "answer" fields. The question s
     throw new Error('Failed to generate exercise');
   }
 }
+
+export async function analyzeSolution(code: string): Promise<{ correct: boolean; feedback: string }> {
+  try {
+    const response = await anthropic.messages.create({
+      model: 'claude-3-7-sonnet-latest',
+      max_tokens: 1000,
+      messages: [
+        {
+          role: 'user',
+           content: `Please analyze this FizzBuzz solution and provide feedback:
+
+  ${code}
+
+  The task is: Write a function that prints the numbers from 1 to 100. But for multiples of
+  three, print "Fizz" instead of the number, and for multiples of five, print "Buzz". For
+  numbers which are multiples of both three and five, print "FizzBuzz".
+
+  Please respond in JSON format with the following structure: Only include raw JSON. Do not include anything else.
+  {
+    "correct": boolean,
+    "feedback": "string with detailed feedback"
+  }
+
+  If the solution is correct, set "correct" to true and provide positive feedback. If
+  incorrect, set "correct" to false and provide specific feedback on what needs to be
+  improved.`
+      }
+      ]
+    });
+
+    const content = response.content[0].type === 'text' ? response.content[0].text : '';
+
+    const result = JSON.parse(content);
+    return {
+      correct: result.correct,
+      feedback: result.feedback
+    };
+  } catch (error) {
+    console.error('Error analyzing FizzBuzz solution:', error);
+    throw new Error('Failed to analyze FizzBuzz solution');
+  }
+}
