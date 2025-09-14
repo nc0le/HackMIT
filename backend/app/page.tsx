@@ -23,7 +23,7 @@ const HomePage: React.FC = () => {
                                 Your comprehensive coding education platform with interactive exercises, progress tracking, and community features.
                             </p>
 
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                                 {/* Summary Card */}
                                 <Link href="/summary" className="block">
                                     <div className="rounded-2xl p-6 bg-[#F5F5DC] hover:scale-105 transition-transform duration-200 cursor-pointer h-48" style={{border: '1.5px solid #000000'}}>
@@ -50,21 +50,6 @@ const HomePage: React.FC = () => {
                                             </div>
                                             <h3 className="text-xl font-semibold text-black mb-2">Lessons</h3>
                                             <p className="text-gray-600">Interactive coding exercises</p>
-                                        </div>
-                                    </div>
-                                </Link>
-
-                                {/* Leaderboard Card */}
-                                <Link href="/leaderboard" className="block">
-                                    <div className="rounded-2xl p-6 bg-[#F5F5DC] hover:scale-105 transition-transform duration-200 cursor-pointer h-48" style={{border: '1.5px solid #000000'}}>
-                                        <div className="text-center">
-                                            <div className="p-3 rounded-full mx-auto mb-4 w-16 h-16 flex items-center justify-center" style={{backgroundColor: '#F0C022'}}>
-                                                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                                </svg>
-                                            </div>
-                                            <h3 className="text-xl font-semibold text-black mb-2">Leaderboard</h3>
-                                            <p className="text-gray-600">Compare your progress with friends</p>
                                         </div>
                                     </div>
                                 </Link>

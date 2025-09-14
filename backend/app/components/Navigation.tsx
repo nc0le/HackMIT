@@ -19,8 +19,7 @@ const Navigation: React.FC = () => {
     const navigationItems: NavigationItem[] = [
         { name: 'HOME', href: '/' },
         { name: 'SUMMARY', href: '/summary' },
-        { name: 'LESSONS', href: '/lessons' },
-        { name: 'LEADERBOARD', href: '/leaderboard' }
+        { name: 'LESSONS', href: '/lessons' }
     ];
 
     const handleProfileClick = () => {

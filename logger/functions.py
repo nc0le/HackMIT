@@ -12,24 +12,22 @@ api_host: str = os.environ.get("BACKEND_URL")
 api_url: str = f"{api_host}/api/exercises"
 client: Client = create_client(url, key)
 
-USER_ID="temp"
-
-def upload_to_database(cursor_prompt: str):
+def upload_to_database(cursor_prompt: str, user_id: str):
   response = (
     client.table("cursor_prompts")
     .insert({
       "cursor_prompt": cursor_prompt,
-      "user_id": USER_ID
+      "user_id": user_id
       })
     .execute()
   )
   return response
 
-def prompt_to_update(last_prompts: list[str]):
+def prompt_to_update(last_prompts: list[str], user_id: str):
   def background_request():
     payload = {
       "last_prompts": last_prompts,
-      "user_id": USER_ID
+      "user_id": user_id
     }
 
     headers = {

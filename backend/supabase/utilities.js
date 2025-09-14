@@ -143,7 +143,7 @@ export async function getConceptsWithMostExercises(userId) {
                 error: null,
             };
         }
-
+        console.log("countings");
         // Count how many exercises each concept appears in
         const conceptCounts = {};
 

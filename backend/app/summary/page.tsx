@@ -35,7 +35,9 @@ const SummaryPage: React.FC = () => {
     const [isLoadingExercises, setIsLoadingExercises] = useState<boolean>(true);
     const [topConcepts, setTopConcepts] = useState<any[]>([]);
     const [isLoadingConcepts, setIsLoadingConcepts] = useState<boolean>(true);
-    const [weeklyProgress, setWeeklyProgress] = useState<WeeklyProgressItem[]>([]);
+    const [weeklyProgress, setWeeklyProgress] = useState<WeeklyProgressItem[]>(
+        []
+    );
     const [currentStreak, setCurrentStreak] = useState<number>(0);
     const [isLoadingProgress, setIsLoadingProgress] = useState<boolean>(true);
 
@@ -84,7 +86,12 @@ const SummaryPage: React.FC = () => {
 
             try {
                 // Fetch all data in parallel
-                const [skillResult, exerciseResult, conceptsResult, progressResult] = await Promise.all([
+                const [
+                    skillResult,
+                    exerciseResult,
+                    conceptsResult,
+                    progressResult,
+                ] = await Promise.all([
                     getAverageSkillLevel(userId),
                     getCompletedExercisesCount(userId),
                     getConceptsWithMostExercises(userId),
@@ -125,8 +132,10 @@ const SummaryPage: React.FC = () => {
                     setTopConcepts([]); // Default to empty array on error
                 } else {
                     // Get top 3 concepts with exercise counts > 0
-                    const top3 = (conceptsResult.conceptsWithExerciseCounts || [])
-                        .filter(concept => concept.exerciseCount > 0)
+                    const top3 = (
+                        conceptsResult.conceptsWithExerciseCounts || []
+                    )
+                        .filter((concept) => concept.exerciseCount > 0)
                         .slice(0, 3);
                     setTopConcepts(top3);
                 }
@@ -177,7 +186,6 @@ const SummaryPage: React.FC = () => {
 
         fetchData();
     }, [userId]);
-
 
     return (
         <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -325,7 +333,7 @@ const SummaryPage: React.FC = () => {
                     {/* Weekly Progress Chart and Top Concepts */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* Top Concepts Card */}
-                        <div
+                        {/* <div
                             className="rounded-2xl p-6 bg-[#F5F5DC]"
                             style={{ border: "1.5px solid #000000" }}
                         >
@@ -381,10 +389,10 @@ const SummaryPage: React.FC = () => {
                                     <p className="text-sm text-gray-600">No concepts practiced yet</p>
                                 </div>
                             )}
-                        </div>
+                        </div> */}
 
                         {/* Weekly Recap - Spans 2 columns */}
-                        <div className="lg:col-span-2">
+                        <div className="lg:col-span-3">
                             <div
                                 className="rounded-2xl p-6"
                                 style={{
@@ -397,27 +405,29 @@ const SummaryPage: React.FC = () => {
                                 </h3>
                                 {isLoadingProgress ? (
                                     <div className="flex items-center justify-center h-32">
-                                        <p className="text-sm text-gray-600">Loading...</p>
+                                        <p className="text-sm text-gray-600">
+                                            Loading...
+                                        </p>
                                     </div>
                                 ) : (
                                     <div className="flex items-end justify-between h-32 space-x-2">
                                         {weeklyProgress.map((day, index) => (
-                                        <div
-                                            key={index}
-                                            className="flex flex-col items-center flex-1 h-full"
-                                        >
-                                            <div className="w-full flex flex-col justify-end h-full items-center">
-                                                <div
-                                                    className="w-[50px] bg-gradient-to-t from-[#A7CA4D] to-[#A7CA4D] rounded-t-md min-h-[8px]"
-                                                    style={{
-                                                        height: `${day.height}%`,
-                                                    }}
-                                                ></div>
+                                            <div
+                                                key={index}
+                                                className="flex flex-col items-center flex-1 h-full"
+                                            >
+                                                <div className="w-full flex flex-col justify-end h-full items-center">
+                                                    <div
+                                                        className="w-[50px] bg-gradient-to-t from-[#A7CA4D] to-[#A7CA4D] rounded-t-md min-h-[8px]"
+                                                        style={{
+                                                            height: `${day.height}%`,
+                                                        }}
+                                                    ></div>
+                                                </div>
+                                                <span className="text-xs text-gray-700 mt-2 font-medium">
+                                                    {day.day}
+                                                </span>
                                             </div>
-                                            <span className="text-xs text-gray-700 mt-2 font-medium">
-                                                {day.day}
-                                            </span>
-                                        </div>
                                         ))}
                                     </div>
                                 )}
