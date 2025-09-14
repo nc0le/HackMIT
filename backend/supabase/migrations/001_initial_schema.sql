@@ -4,10 +4,10 @@ CREATE TYPE exercise_type AS ENUM ('flashcard', 'code', 'quiz');
 
 -- Create cursor_prompts table
 CREATE TABLE cursor_prompts (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-    prompt_text TEXT NOT NULL,
-    timestamp TIMESTAMPTZ DEFAULT NOW()
+    id BIGSERIAL PRIMARY KEY,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    cursor_prompt TEXT NOT NULL,
+    user_id TEXT NOT NULL
 );
 
 -- Create concepts table
@@ -15,7 +15,7 @@ CREATE TABLE concepts (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     concept_name TEXT NOT NULL,
-    source_prompt_id UUID REFERENCES cursor_prompts(id) ON DELETE SET NULL,
+    source_prompt_id BIGINT REFERENCES cursor_prompts(id) ON DELETE SET NULL,
     status concept_status DEFAULT 'unlearned',
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -35,7 +35,7 @@ CREATE TABLE exercises (
 
 -- Create indexes for better query performance
 CREATE INDEX idx_cursor_prompts_user_id ON cursor_prompts(user_id);
-CREATE INDEX idx_cursor_prompts_timestamp ON cursor_prompts(timestamp);
+CREATE INDEX idx_cursor_prompts_created_at ON cursor_prompts(created_at);
 
 CREATE INDEX idx_concepts_user_id ON concepts(user_id);
 CREATE INDEX idx_concepts_status ON concepts(status);
@@ -56,10 +56,10 @@ ALTER TABLE exercises ENABLE ROW LEVEL SECURITY;
 
 -- cursor_prompts policies
 CREATE POLICY "Users can view own prompts" ON cursor_prompts
-    FOR SELECT USING (auth.uid() = user_id);
+    FOR SELECT USING (auth.uid()::text = user_id);
 
 CREATE POLICY "Users can insert own prompts" ON cursor_prompts
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
+    FOR INSERT WITH CHECK (auth.uid()::text = user_id);
 
 -- concepts policies
 CREATE POLICY "Users can view own concepts" ON concepts
