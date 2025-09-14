@@ -5,7 +5,7 @@ const Summary = () => {
     const dashboardData = {
         totalSessions: 18,
         mostFrequentTopic: 'React Hooks',
-        overallEfficiency: '82%'
+        skillDiagnosis: 'Beginner'
     };
 
     // Weekly progress data (heights as percentages)
@@ -32,7 +32,7 @@ const Summary = () => {
                 <div className="rounded-lg p-6 transform hover:scale-105 transition-all duration-200 bg-[#F5F5DC] border-2 border-black">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm font-medium text-gray-700">Total Sessions</p>
+                            <p className="text-sm font-medium text-gray-700">Total Exercises Solved</p>
                             <p className="text-3xl font-bold text-black mt-2">{dashboardData.totalSessions}</p>
                         </div>
                         <div className="p-3 rounded-full" style={{backgroundColor: '#E89228'}}>
@@ -47,7 +47,7 @@ const Summary = () => {
                 <div className="rounded-lg p-6 transform hover:scale-105 transition-all duration-200 bg-[#F5F5DC] border-2 border-black">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm font-medium text-gray-700">Most Frequent Topic</p>
+                            <p className="text-sm font-medium text-gray-700">Most Frequently Asked About</p>
                             <p className="text-xl font-bold text-black mt-2">{dashboardData.mostFrequentTopic}</p>
                         </div>
                         <div className="p-3 rounded-full" style={{backgroundColor: '#E89228'}}>
@@ -62,8 +62,8 @@ const Summary = () => {
                 <div className="rounded-lg p-6 transform hover:scale-105 transition-all duration-200 bg-[#F5F5DC] border-2 border-black">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm font-medium text-gray-700">Overall Efficiency</p>
-                            <p className="text-3xl font-bold text-black mt-2">{dashboardData.overallEfficiency}</p>
+                            <p className="text-sm font-medium text-gray-700">Skill Diagnosis</p>
+                            <p className="text-xl font-bold text-black mt-2">{dashboardData.skillDiagnosis}</p>
                         </div>
                         <div className="p-3 rounded-full" style={{backgroundColor: '#E89228'}}>
                             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
