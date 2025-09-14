@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import './globals.css'
 import Navigation from './components/Navigation'
+import { UserProvider } from './contexts/UserContext'
 
 export const metadata: Metadata = {
   title: 'Learning App',
@@ -27,10 +28,12 @@ export default function RootLayout({
           }}
         />
         <div className="relative z-10">
-          <Navigation />
-          <main className="pt-16">
-            {children}
-          </main>
+          <UserProvider>
+            <Navigation />
+            <main className="pt-16">
+              {children}
+            </main>
+          </UserProvider>
         </div>
       </body>
     </html>

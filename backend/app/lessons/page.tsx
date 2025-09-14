@@ -5,6 +5,10 @@ import HintModal from "../components/HintModal";
 import ProgressEditModal from "../components/ProgressEditModal";
 import { ExerciseInsert } from "@/types/database";
 import { getCodingExercisesByUserId } from "@/supabase/utilities";
+import CodeMirror from "@uiw/react-codemirror";
+import { javascript } from "@codemirror/lang-javascript";
+import { oneDark } from "@codemirror/theme-one-dark";
+import { useUser } from "@/app/contexts/UserContext";
 
 interface SubmitResponse {
     success: boolean;
@@ -13,9 +17,8 @@ interface SubmitResponse {
     error?: string;
 }
 
-let USER_ID = "temp";
-
 const LessonsPage: React.FC = () => {
+    const { userId } = useUser();
     const [exercises, setExercises] = useState<ExerciseInsert[]>([]);
     const [currentExerciseIndex, setCurrentExerciseIndex] = useState<number>(0);
     const [showHintModal, setShowHintModal] = useState<boolean>(false);
@@ -35,7 +38,7 @@ const LessonsPage: React.FC = () => {
 
     useEffect(() => {
         const fetchExercises = async () => {
-            const { data, error } = await getCodingExercisesByUserId(USER_ID);
+            const { data, error } = await getCodingExercisesByUserId(userId);
 
             if (data && !error) {
                 console.log(data);
@@ -68,7 +71,7 @@ const LessonsPage: React.FC = () => {
         };
 
         fetchExercises();
-    }, []);
+    }, [userId]);
 
     const handleGetHint = (): void => {
         setShowHintModal(true);
@@ -185,13 +188,11 @@ const LessonsPage: React.FC = () => {
         }
     };
 
-    const handleTextareaChange = (
-        e: React.ChangeEvent<HTMLTextAreaElement>
-    ): void => {
+    const handleCodeChange = (value: string): void => {
         if (currentExercise) {
             const updatedExercises = exercises.map((exercise, index) =>
                 index === currentExerciseIndex
-                    ? { ...exercise, code: e.target.value }
+                    ? { ...exercise, code: value }
                     : exercise
             );
             setExercises(updatedExercises);
@@ -349,7 +350,7 @@ const LessonsPage: React.FC = () => {
 
                         {/* Right Column - Exercise Panel (2/3 width) */}
                         <div
-                            className="w-full rounded-2xl overflow-hidden flex flex-col"
+                            className="w-full rounded-2xl overflow-hidden flex flex-col max-h-min"
                             style={{
                                 backgroundColor: "#DCDCC7",
                                 border: "1.5px solid #000000",
@@ -373,143 +374,155 @@ const LessonsPage: React.FC = () => {
                             </div>
 
                             {/* Code Editor Area */}
-                            <div className="flex-1 flex flex-col">
+                            <div className="flex-1 flex flex-col relative max-h-min">
                                 <div
-                                    className="flex-1 p-6"
+                                    className="flex-1 overflow-hidden max-h-min"
                                     style={{ backgroundColor: "#272723" }}
                                 >
-                                    <textarea
+                                    <CodeMirror
                                         value={currentExercise?.code || ""}
-                                        onChange={handleTextareaChange}
-                                        className="w-full h-full resize-none border-none outline-none text-sm leading-relaxed text-[#E2C154]"
-                                        style={{
-                                            backgroundColor: "transparent",
-                                            fontFamily:
-                                                "JetBrains Mono, monospace",
-                                        }}
+                                        height="55vh"
+                                        theme={oneDark}
+                                        extensions={[javascript()]}
+                                        onChange={handleCodeChange}
                                         placeholder="Write your code here..."
-                                        spellCheck={false}
+                                        basicSetup={{
+                                            lineNumbers: true,
+                                            foldGutter: true,
+                                            dropCursor: false,
+                                            allowMultipleSelections: false,
+                                            indentOnInput: true,
+                                            bracketMatching: true,
+                                            closeBrackets: true,
+                                            autocompletion: true,
+                                            highlightSelectionMatches: false,
+                                        }}
                                     />
                                 </div>
-                            </div>
 
-                            {/* Action Buttons */}
-                            <div
-                                className="px-6 py-4 border-t border-[#272723]"
-                                style={{ backgroundColor: "#272723" }}
-                            >
-                                {/* Success Message */}
-                                {submitSuccess && (
-                                    <div className="mb-4 p-3 bg-[#CAE760] border border-green-300 rounded-md">
-                                        <div className="flex items-center">
-                                            <svg
-                                                className="w-5 h-5 text-green-600 mr-2"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth={2}
-                                                    d="M5 13l4 4L19 7"
-                                                />
-                                            </svg>
-                                            <span className="text-sm font-medium text-green-700">
-                                                Success! Your solution is
-                                                correct.
-                                            </span>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Needs Review Message */}
-                                {submitNeedsReview && (
-                                    <div className="mb-4 p-3 bg-[#FFE4B5] border border-orange-300 rounded-md">
-                                        <div className="flex items-start">
-                                            <svg
-                                                className="w-5 h-5 text-orange-600 mr-2 mt-0.5 flex-shrink-0"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth={2}
-                                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-                                                />
-                                            </svg>
-                                            <div className="text-sm font-medium text-orange-700">
-                                                {feedbackMessage}
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                <div className="flex justify-between items-center w-full">
-                                    {/* <button
-                                        onClick={handleGetHint}
-                                        className="px-4 py-2 text-sm font-medium text-black border border-[#E89228] rounded-md"
-                                        style={{ backgroundColor: "#E89228" }}
-                                    >
-                                        Get a Hint
-                                    </button> */}
-                                    <button
-                                        onClick={
-                                            submitSuccess
-                                                ? handleNext
-                                                : handleSubmit
-                                        }
-                                        disabled={
-                                            isSubmitting ||
-                                            (submitSuccess &&
-                                                currentExerciseIndex >=
-                                                    exercises.length - 1)
-                                        }
-                                        className={`px-6 py-2 text-sm font-medium text-black rounded-md flex items-center ${
-                                            isSubmitting ||
-                                            (submitSuccess &&
-                                                currentExerciseIndex >=
-                                                    exercises.length - 1)
-                                                ? "cursor-not-allowed opacity-50"
-                                                : ""
-                                        }`}
-                                        style={{ backgroundColor: "#ADCF36" }}
-                                    >
-                                        {isSubmitting ? (
-                                            <>
+                                {/* Floating Action Buttons */}
+                                <div
+                                    className="absolute bottom-0 left-0 right-0 px-6 py-4"
+                                    // style={{
+                                    //     backgroundColor:
+                                    //         "rgba(39, 39, 35, 0.95)",
+                                    // }}
+                                >
+                                    {/* Success Message */}
+                                    {submitSuccess && (
+                                        <div className="mb-4 p-3 bg-[#CAE760] border border-green-300 rounded-md">
+                                            <div className="flex items-center">
                                                 <svg
-                                                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    className="w-5 h-5 text-green-600 mr-2"
                                                     fill="none"
+                                                    stroke="currentColor"
                                                     viewBox="0 0 24 24"
                                                 >
                                                     <path
                                                         strokeLinecap="round"
                                                         strokeLinejoin="round"
                                                         strokeWidth={2}
-                                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15v-.006a8.003 8.003 0 01-15.357 2m15.357 2v5H5.582m0 0a8.001 8.001 0 01-15.357-2m15.357 2H9a8.003 8.003 0 01-15.357 2z"
+                                                        d="M5 13l4 4L19 7"
                                                     />
-                                                    <path
-                                                        className="opacity-75"
-                                                        fill="currentColor"
-                                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                                    ></path>
                                                 </svg>
-                                                Checking...
-                                            </>
-                                        ) : submitSuccess ? (
-                                            currentExerciseIndex >=
-                                            exercises.length - 1 ? (
-                                                "Completed"
+                                                <span className="text-sm font-medium text-green-700">
+                                                    Success! Your solution is
+                                                    correct.
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Needs Review Message */}
+                                    {submitNeedsReview && (
+                                        <div className="mb-4 p-3 bg-[#FFE4B5] border border-orange-300 rounded-md">
+                                            <div className="flex items-start">
+                                                <svg
+                                                    className="w-5 h-5 text-orange-600 mr-2 mt-0.5 flex-shrink-0"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth={2}
+                                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                                                    />
+                                                </svg>
+                                                <div className="text-sm font-medium text-orange-700">
+                                                    {feedbackMessage}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="flex justify-between items-center w-full">
+                                        {/* <button
+                                        onClick={handleGetHint}
+                                        className="px-4 py-2 text-sm font-medium text-black border border-[#E89228] rounded-md"
+                                        style={{ backgroundColor: "#E89228" }}
+                                    >
+                                        Get a Hint
+                                    </button> */}
+                                        <button
+                                            onClick={
+                                                submitSuccess
+                                                    ? handleNext
+                                                    : handleSubmit
+                                            }
+                                            disabled={
+                                                isSubmitting ||
+                                                (submitSuccess &&
+                                                    currentExerciseIndex >=
+                                                        exercises.length - 1)
+                                            }
+                                            className={`px-6 py-2 text-sm font-medium text-black rounded-md flex items-center ${
+                                                isSubmitting ||
+                                                (submitSuccess &&
+                                                    currentExerciseIndex >=
+                                                        exercises.length - 1)
+                                                    ? "cursor-not-allowed opacity-50"
+                                                    : ""
+                                            }`}
+                                            style={{
+                                                backgroundColor: "#ADCF36",
+                                            }}
+                                        >
+                                            {isSubmitting ? (
+                                                <>
+                                                    <svg
+                                                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                    >
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth={2}
+                                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15v-.006a8.003 8.003 0 01-15.357 2m15.357 2v5H5.582m0 0a8.001 8.001 0 01-15.357-2m15.357 2H9a8.003 8.003 0 01-15.357 2z"
+                                                        />
+                                                        <path
+                                                            className="opacity-75"
+                                                            fill="currentColor"
+                                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                                        ></path>
+                                                    </svg>
+                                                    Checking...
+                                                </>
+                                            ) : submitSuccess ? (
+                                                currentExerciseIndex >=
+                                                exercises.length - 1 ? (
+                                                    "Completed"
+                                                ) : (
+                                                    "Next"
+                                                )
                                             ) : (
-                                                "Next"
-                                            )
-                                        ) : (
-                                            "Submit"
-                                        )}
-                                    </button>
+                                                "Submit"
+                                            )}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
