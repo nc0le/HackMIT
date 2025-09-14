@@ -81,6 +81,7 @@ export async function generateConceptSummary(
                                     "Key programming concepts to learn. Limit to 3 max.",
                             },
                         },
+                        required: ["concepts"],
                     },
                 },
             ],
@@ -148,7 +149,7 @@ export async function generateConceptSummary(
             }
         );
 
-        return processedConcepts;
+        return processedConcepts.slice(0, 3);
     } catch (error) {
         console.error("Error generating concept summary:", error);
         throw new Error("Failed to generate concept summary");
@@ -236,6 +237,7 @@ export async function generateExercise(
                                 },
                             },
                         },
+                        required: ["exercises"],
                     },
                 },
             ],
@@ -260,14 +262,16 @@ export async function generateExercise(
         console.log("Tool response:", toolResponse);
 
         // Convert tool response to ExerciseInsert array
-        const exercises: ExerciseInsert[] = toolResponse.exercises.map((exerciseData: any, index: number) => ({
-            user_id: concepts[0]?.user_id || "temp", // Use user_id from first concept
-            title: exerciseData.title,
-            description: exerciseData.description,
-            concepts: exerciseData.concept_names, // Array of concept names
-            code: exerciseData.exercise_code,
-            completed: false
-        }));
+        const exercises: ExerciseInsert[] = toolResponse.exercises.map(
+            (exerciseData: any, index: number) => ({
+                user_id: concepts[0]?.user_id || "temp", // Use user_id from first concept
+                title: exerciseData.title,
+                description: exerciseData.description,
+                concepts: exerciseData.concept_names, // Array of concept names
+                code: exerciseData.exercise_code,
+                completed: false,
+            })
+        );
 
         return exercises;
     } catch (error) {
