@@ -4,7 +4,7 @@ Detects multi-line pastes and sends only one POST.
 Uses timing to distinguish pasted vs typed text (optional).
 Requires the `requests` library.
 
-Run with python logger.py -- claude
+Run with python logger.py -u username -- command
 """
 
 import os
@@ -23,17 +23,17 @@ from utilities import clean_terminal_input, is_physical_enter
 PASTE_THRESHOLD = 0.005  # 5 ms
 PROMPTS_THRESHOLD = 3 
 
-def cleanup_and_exit(last_prompts):
+def cleanup_and_exit(last_prompts, username):
     """Send remaining prompts before exit"""
     if last_prompts:
         print("\nSending remaining prompts before exit...")
         try:
-            prompt_to_update(last_prompts)
+            prompt_to_update(last_prompts, username)
         except Exception as e:
             print(f"Error sending final prompts: {e}")
     sys.exit(0)
 
-def run_and_log(cmd_args, url=None):
+def run_and_log(cmd_args, username, url=None):
     pid, master_fd = pty.fork()
     if pid == 0:
         # Child process: run target program
@@ -56,7 +56,7 @@ def run_and_log(cmd_args, url=None):
 
         # Set up signal handlers for graceful exit
         def signal_handler(signum, frame):
-            cleanup_and_exit(last_prompts)
+            cleanup_and_exit(last_prompts, username)
 
         signal.signal(signal.SIGINT, signal_handler)  # Ctrl+C
         signal.signal(signal.SIGTERM, signal_handler)  # Termination signal
@@ -86,11 +86,11 @@ def run_and_log(cmd_args, url=None):
                             # Only trigger POST on actual Enter keypress (not paste)
                             if line_buffer:
                                 command_line: str = clean_terminal_input("".join(line_buffer))
-                                upload_to_database(command_line)
+                                upload_to_database(command_line, username)
                                 last_prompts.append(command_line)
                                 
                                 if len(last_prompts) >= PROMPTS_THRESHOLD:
-                                    prompt_to_update(last_prompts)
+                                    prompt_to_update(last_prompts, username)
                                     last_prompts = []
                             line_buffer = []
                         elif b in (8, 127):  # backspace/delete
@@ -115,7 +115,7 @@ def run_and_log(cmd_args, url=None):
             if last_prompts:
                 print("\nSending remaining prompts before exit...")
                 try:
-                    prompt_to_update(last_prompts)
+                    prompt_to_update(last_prompts, username)
                 except Exception as e:
                     print(f"Error sending final prompts: {e}")
 
@@ -129,15 +129,16 @@ def run_and_log(cmd_args, url=None):
 
 def main():
     parser = argparse.ArgumentParser(description="PTY logger with paste detection")
+    parser.add_argument("-u", "--username", required=True, help="Username for logging")
     parser.add_argument("cmd", nargs=argparse.REMAINDER, help="-- then command and args to run")
     args = parser.parse_args()
 
     if not args.cmd:
-        print("Error: no command supplied. Use -- /path/to/program args...", file=sys.stderr)
+        print("Error: no command supplied. Use -u username -- /path/to/program args...", file=sys.stderr)
         sys.exit(2)
 
     cmd_args = args.cmd[1:] if args.cmd[0] == '--' else args.cmd
-    run_and_log(cmd_args)
+    run_and_log(cmd_args, args.username)
 
 
 if __name__ == "__main__":

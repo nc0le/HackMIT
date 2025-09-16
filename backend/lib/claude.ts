@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { ExerciseInsert } from "@/types/database";
 
 const anthropic = new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY,
@@ -95,9 +96,8 @@ export async function generateConceptSummary(
                     ),
                 },
             ],
-        });
+        }); // Extract tool response
 
-        // Extract tool response
         const toolUse = response.content.find(
             (content) => content.type === "tool_use"
         );
@@ -106,9 +106,8 @@ export async function generateConceptSummary(
         }
 
         const toolResponse = toolUse.input as any;
-        console.log("Tool response:", toolResponse);
+        console.log("Tool response:", toolResponse); // Process each concept in the response
 
-        // Process each concept in the response
         const processedConcepts: Concept[] = toolResponse.concepts.map(
             (conceptData) => {
                 if (conceptData.is_new) {
@@ -168,14 +167,14 @@ function generateExercisePrompt(exerciseType, concepts: [Concept]) {
 
     let prompt = `Imagine you are a seasoned CS professor tasked with creating practice problems for specific coding concepts a student can improve on. You are given a list of three key concepts a coder needs to work on here: 
 
-    ${conceptsList} 
-    
-    Using that list, generate three coding exercises total for the concepts. Consider the skillLevel (1 = beginner, 5 = advanced) to determine the difficulty of the exercise. The output must be strictly JSON, do not structure it in any other way. Each concept in the JSON should have exactly four elements: 
-  
-  concept_names: Must exactly match the name(s) of the concept(s) from the input table.
-  title: title for the exercise. should be short
-  description: Instructions for the coding exercise and how it relates to the concept(s), about 3 sentences long.
-  exercise_code: The code for the exercise. Make it concise, clear, and properly formatted with spaces and indentation, just enough for the student to practice the concept. Always follow this format and ensure the JSON is valid.`;
+    ${conceptsList} 
+    
+    Using that list, generate three coding exercises total for the concepts. Consider the skillLevel (1 = beginner, 5 = advanced) to determine the difficulty of the exercise. The output must be strictly JSON, do not structure it in any other way. Each concept in the JSON should have exactly four elements: 
+  
+  concept_names: Must exactly match the name(s) of the concept(s) from the input table.
+  title: title for the exercise. should be short
+  description: Instructions for the coding exercise and how it relates to the concept(s), about 3 sentences long.
+  exercise_code: The code for the exercise. Make it concise, clear, and properly formatted with spaces and indentation, just enough for the student to practice the concept. Always follow this format and ensure the JSON is valid.`;
     console.log(prompt);
     return prompt;
 }
@@ -248,9 +247,8 @@ export async function generateExercise(
                     content: generateExercisePrompt(exerciseType, concepts),
                 },
             ],
-        });
+        }); // Extract tool response
 
-        // Extract tool response
         const toolUse = response.content.find(
             (content) => content.type === "tool_use"
         );
@@ -259,9 +257,8 @@ export async function generateExercise(
         }
 
         const toolResponse = toolUse.input as any;
-        console.log("Tool response:", toolResponse);
+        console.log("Tool response:", toolResponse); // Convert tool response to ExerciseInsert array
 
-        // Convert tool response to ExerciseInsert array
         const exercises: ExerciseInsert[] = toolResponse.exercises.map(
             (exerciseData: any, index: number) => ({
                 user_id: concepts[0]?.user_id || "temp", // Use user_id from first concept
@@ -281,7 +278,9 @@ export async function generateExercise(
 }
 
 export async function analyzeSolution(
-    code: string
+    code: string,
+    title: string,
+    description: string
 ): Promise<{ correct: boolean; feedback: string }> {
     try {
         const response = await anthropic.messages.create({
@@ -290,23 +289,23 @@ export async function analyzeSolution(
             messages: [
                 {
                     role: "user",
-                    content: `Please analyze this FizzBuzz solution and provide feedback:
+                    content: `Act like a CS TA who is grading a coding exercise.
+                    The exercise is called ${title}
+                    and the description is: ${description}
+                    and the code is: ${code}
 
-  ${code}
+  The task is look at the exercise title and description and then grade the solution based on much it matches exercise title and description.
 
-  The task is: Write a function that prints the numbers from 1 to 100. But for multiples of
-  three, print "Fizz" instead of the number, and for multiples of five, print "Buzz". For
-  numbers which are multiples of both three and five, print "FizzBuzz".
+  Please respond in JSON format with the following structure: Only include raw JSON. Do not include anything else.
+  {
+    "correct": boolean,
+    "feedback": "Please tell the user how they did. If they got it right congraduate them. However if they made a mistake first act like a nice TA. Do not be mean, gently tell them that the solution is wrong. 
+    Give them a specific hint guiding them on what to change. DO NOT TELL THEM THE ANSWER, JUST GIVE THEM A HINT."
+  }
 
-  Please respond in JSON format with the following structure: Only include raw JSON. Do not include anything else.
-  {
-    "correct": boolean,
-    "feedback": "string with detailed feedback"
-  }
-
-  If the solution is correct, set "correct" to true and provide positive feedback. If
-  incorrect, set "correct" to false and provide specific feedback on what needs to be
-  improved.`,
+  If the solution is correct, set "correct" to true and provide positive feedback. If
+  incorrect, set "correct" to false and provide specific feedback on what needs to be
+  improved.`,
                 },
             ],
         });

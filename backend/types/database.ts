@@ -49,6 +49,7 @@ export interface ExerciseInsert {
   concepts: [string];
   code: string;
   completed?: boolean;
+  completed_date?: string;
 }
 
 // Update types
