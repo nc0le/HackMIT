@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
                     await supabaseAdmin
                         .from("concepts")
                         .insert({
-                            user_id: concept.user_id,
+                            user_id: validationResult.data.user_id,
                             title: concept.title,
                             description: concept.description,
                             skillLevel: concept.skillLevel,
@@ -75,6 +75,7 @@ export async function POST(request: NextRequest) {
 
                 processedConcepts.push({
                     ...concept,
+                    user_id: validationResult.data.user_id,
                     id: newConcept.id,
                     created_at: newConcept.created_at,
                 });

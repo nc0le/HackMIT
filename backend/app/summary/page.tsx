@@ -198,11 +198,6 @@ const SummaryPage: React.FC = () => {
             >
                 <h1 className="text-3xl font-bold text-black mb-4">SUMMARY</h1>
                 <div className="text-gray-700 space-y-6">
-                    <p className="text-lg">
-                        Welcome to the SUMMARY page. This content area will
-                        display different information based on your navigation
-                        selection.
-                    </p>
                     <h2 className="text-xl font-semibold text-black">
                         Your Stats
                     </h2>

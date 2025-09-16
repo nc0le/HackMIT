@@ -476,8 +476,13 @@ const LessonsPage: React.FC = () => {
                                     )}
 
                                     {/* Needs Review Message */}
-                                    {submitNeedsReview && (
-                                        <div className="mb-4 p-3 bg-[#FFE4B5] border border-orange-300 rounded-md">
+                                    {submitNeedsReview && feedbackMessage && (
+                                        <div
+                                            className="mb-4 p-3 bg-[#FFE4B5] border border-orange-300 rounded-md"
+                                            onClick={() => {
+                                                setFeedbackMessage("");
+                                            }}
+                                        >
                                             <div className="flex items-start">
                                                 <svg
                                                     className="w-5 h-5 text-orange-600 mr-2 mt-0.5 flex-shrink-0"
