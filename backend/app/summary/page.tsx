@@ -1,7 +1,4 @@
-'use client';
-
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
+import React from 'react';
 
 interface DashboardData {
   totalSessions: number;
@@ -15,85 +12,23 @@ interface WeeklyProgressItem {
   height: number;
 }
 
-interface Concept {
-  id: string;
-  name: string;
-  frequency?: number;
-}
-
 const SummaryPage: React.FC = () => {
-  // Dashboard data
-  const dashboardData = {
-    totalSessions: 18,
-    skillDiagnosis: 'Beginner',
-    streakDays: 7
-  };
+    const dashboardData: DashboardData = {
+        totalSessions: 18,
+        mostFrequentTopic: 'React Hooks',
+        skillDiagnosis: 'Beginner',
+        streakDays: 7
+    };
 
-  // Concepts state
-  const [topConcepts, setTopConcepts] = useState<Concept[]>([]);
-  const [conceptsLoading, setConceptsLoading] = useState(true);
-  const [conceptsError, setConceptsError] = useState<string | null>(null);
-
-  // Fetch top concepts from Supabase
-  
-  const fetchTopConcepts = async () => {
-    try {
-      setConceptsLoading(true);
-      
-      // Check if Supabase is configured
-      if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-        console.log('Supabase not configured, using mock data');
-        throw new Error('Supabase not configured');
-      }
-
-      const { data, error } = await supabase
-        .from('concepts')
-        .select('id, title')
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      if (error) {
-        throw error;
-      }
-
-      // Map the data to match the Concept interface
-      const mappedData = data?.map(item => ({
-        id: item.id,
-        name: item.title
-      })) || [];
-
-      setTopConcepts(mappedData);
-    } catch (error) {
-      console.error('Error fetching concepts:', error);
-      setConceptsError(null); // Clear error since we're using fallback
-      // Fallback data
-      setTopConcepts([
-        { id: '1', name: 'React Hooks', frequency: 45 },
-        { id: '2', name: 'JavaScript Arrays', frequency: 38 },
-        { id: '3', name: 'CSS Flexbox', frequency: 32 },
-        { id: '4', name: 'API Integration', frequency: 28 },
-        { id: '5', name: 'State Management', frequency: 24 }
-      ]);
-    } finally {
-      setConceptsLoading(false);
-    }
-  };
-
-  // Load concepts on component mount
-  useEffect(() => {
-    fetchTopConcepts();
-  }, []);
-
-  // Weekly progress data (heights as percentages)
-  const weeklyProgress = [
-    { day: 'Mon', height: 65 },
-    { day: 'Tue', height: 80 },
-    { day: 'Wed', height: 45 },
-    { day: 'Thu', height: 90 },
-    { day: 'Fri', height: 75 },
-    { day: 'Sat', height: 55 },
-    { day: 'Sun', height: 70 }
-  ];
+    const weeklyProgress: WeeklyProgressItem[] = [
+        { day: 'Mon', height: 65 },
+        { day: 'Tue', height: 80 },
+        { day: 'Wed', height: 45 },
+        { day: 'Thu', height: 90 },
+        { day: 'Fri', height: 75 },
+        { day: 'Sat', height: 55 },
+        { day: 'Sun', height: 70 }
+    ];
 
     return (
         <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -159,36 +94,17 @@ const SummaryPage: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Most Frequent Topic Card */}
                 <div className="rounded-2xl p-6 transform hover:scale-105 transition-all duration-200 bg-[#F5F5DC]" style={{border: '1.5px solid #000000'}}>
-                    <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-700">Most Frequently Asked About:</p>  
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm font-medium text-gray-700">Most Frequently Asked About</p>
+                            <p className="text-xl font-bold text-black mt-2">{dashboardData.mostFrequentTopic}</p>
                         </div>
-
+                        <div className="p-3 rounded-full" style={{backgroundColor: '#E89228'}}>
+                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                            </svg>
+                        </div>
                     </div>
-                    
-                    {conceptsLoading ? (
-                        <div className="space-y-2">
-                            {[...Array(5)].map((_, i) => (
-                                <div key={i} className="h-4 bg-gray-200 rounded animate-pulse"></div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="space-y-2">
-                            {topConcepts.map((concept, index) => (
-                                <div key={concept.id} className="flex items-center justify-between text-sm">
-                                    <div className="flex items-center">
-                                        <span className="w-5 h-5 rounded-full bg-[#E89228] text-white text-xs flex items-center justify-center mr-2">
-                                            {index + 1}
-                                        </span>
-                                        <span className="text-black font-medium">{concept.name}</span>
-                                    </div>
-                                    {concept.frequency && (
-                                        <span className="text-gray-600 text-xs">{concept.frequency}</span>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    )}
                 </div>
 
                 {/* Weekly Recap - Spans 2 columns */}
